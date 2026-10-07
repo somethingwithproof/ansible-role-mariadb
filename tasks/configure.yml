@@ -6,8 +6,8 @@
     src: mariadb.cnf.j2
     dest: "{{ mariadb_config_dir }}/mariadb.conf.d/99-ansible-managed.cnf"
     owner: root
-    group: root
-    mode: '0644'
+    group: mysql
+    mode: '0640'
   notify: restart mariadb
   register: mariadb_config
 
@@ -16,8 +16,8 @@
     path: "{{ mariadb_config_dir }}/conf.d"
     state: directory
     owner: root
-    group: root
-    mode: '0755'
+    group: mysql
+    mode: '0750'
 
 - name: Verify TLS certificates exist if TLS enabled
   when: mariadb_tls_enabled | bool

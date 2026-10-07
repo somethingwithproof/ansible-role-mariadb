@@ -94,9 +94,10 @@
   ansible.builtin.template:
     src: mariadb_monitoring.sh.j2
     dest: /usr/local/bin/mariadb_monitoring.sh
-    mode: '0755'
+    mode: '0700'
     owner: root
     group: root
+  no_log: true
   tags: [mariadb, monitoring]
 
 - name: Configure monitoring check cron job

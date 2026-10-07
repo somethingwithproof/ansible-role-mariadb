@@ -9,9 +9,7 @@ name: Dependabot Auto-Merge
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
-  checks: read
+  contents: read
 
 concurrency:
   group: dependabot-auto-merge
@@ -21,8 +19,15 @@ jobs:
   merge:
     if: >-
       github.event_name != 'pull_request_target' ||
-      github.actor == 'dependabot[bot]'
+      (github.actor_id == '49699333' &&
+       github.event.pull_request.user.id == 49699333 &&
+       github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
     steps:
       - name: Merge Dependabot pull requests with successful checks
         shell: bash
@@ -35,11 +40,11 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --state open \
             --author "app/dependabot" \
-            --json number,isDraft,mergeable \
+            --json number,isDraft,mergeable,headRefOid \
             --jq '.[] |
               select(.isDraft == false and .mergeable == "MERGEABLE") |
-              .number' |
-          while read -r pr; do
+              [.number, .headRefOid] | @tsv' |
+          while read -r pr head; do
             [ -n "$pr" ] || continue
 
             states=$(gh pr checks "$pr" \
@@ -59,5 +64,6 @@ jobs:
             gh pr merge "$pr" \
               --repo "$GITHUB_REPOSITORY" \
               --squash \
+              --match-head-commit "$head" \
               --delete-branch
           done
