@@ -7,7 +7,10 @@
     # Cluster configuration
     mariadb_cluster_enabled: true
     mariadb_cluster_name: "production_cluster"
-    mariadb_wsrep_cluster_address: "gcomm://{{ groups['mariadb_cluster'] | map('extract', hostvars, 'ansible_default_ipv4') | map(attribute='address') | join(',') }}"
+    mariadb_wsrep_cluster_address: >-
+      gcomm://{{ groups['mariadb_cluster']
+      | map('extract', hostvars, 'ansible_default_ipv4')
+      | map(attribute='address') | join(',') }}
 
     # Node configuration
     mariadb_wsrep_node_address: "{{ ansible_default_ipv4.address }}"
