@@ -97,3 +97,12 @@ The GitHub API filters PR authors and supplies the exact commit passed to merge.
 Both compatibility locks use the project-declared Docker SDK 7.2.0 so the
 current Requests transport can connect to the runner's Docker daemon. The backup
 directory is managed only by backup tasks, preventing ownership oscillation.
+
+Ansible 12.2 has a separate `ci-ansible-12.2.0` compatibility environment using
+Python 3.11. The existing Ansible 9/10 environments keep Python 3.10 and their
+original locks. Dependabot major Ansible changes must be reviewed as a new
+environment, rather than replacing the package inside a differently named
+compatibility lock. The Ansible 12 environment runs the same default and
+multi-instance/distro matrix; additional scenarios retain their existing
+Ansible 10 environment. This declares test coverage, not untested production
+support.

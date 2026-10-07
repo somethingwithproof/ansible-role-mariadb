@@ -1,5 +1,5 @@
 ---
-# Dependabot configuration for Mantl Platform
+# Dependabot configuration for the MariaDB Ansible role
 # Comprehensive dependency tracking across all ecosystems
 # - GitHub Actions: Grouped updates to reduce PR noise
 # - Python (pip): Weekly security and feature updates
@@ -51,6 +51,11 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       prefix-development: "chore(deps-dev)"
+    # Versioned compatibility environments must keep their declared Ansible family.
+    # Review a new major as a separate environment with its required Python.
+    ignore:
+      - dependency-name: "ansible"
+        update-types: ["version-update:semver-major"]
     allow:
       - dependency-type: "all"
     groups:
