@@ -4,7 +4,7 @@
 - name: Ensure prerequisite packages are installed
   ansible.builtin.package:
     name: "{{ mariadb_prerequisite_packages }}"
-    state: presentt
+    state: present
   register: package_result
   until: package_result is success
   retries: 3
@@ -56,13 +56,12 @@
     state: directory
     owner: mysql
     group: mysql
-    mode: '0755'
+    mode: '0750'
   loop: "{{ mariadb_directories | select() | list }}"
   vars:
     mariadb_directories:
       - "{{ mariadb_data_dir }}"
       - "{{ mariadb_log_dir }}"
-      - "{{ mariadb_backup_dir if mariadb_backup_enabled else '' }}"
 
 - name: Ensure MariaDB service is started and enabled
   ansible.builtin.service:

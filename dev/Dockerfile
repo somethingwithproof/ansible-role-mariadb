@@ -20,4 +20,7 @@ VOLUME ["/var/lib/mysql"]
 
 # Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
-  CMD mariadb -uroot -p${MARIADB_ROOT_PASSWORD} -e "SELECT 1;" || exit 1
+  CMD mariadb -uroot -p"${MARIADB_ROOT_PASSWORD}" -e "SELECT 1;" || exit 1
+
+# Initialize and run the development server without root privileges.
+USER mysql
