@@ -139,6 +139,23 @@ class SecurityContracts(unittest.TestCase):
             self.assertEqual(template["owner"], "root")
             self.assertTrue(task["no_log"])
 
+    def test_backup_directory_has_one_owner(self):
+        """Installation must not undo root-owned backup storage each run."""
+        install = yaml.safe_load((ROOT / "tasks/install.yml").read_text())
+        for task in install:
+            directories = task.get("vars", {}).get("mariadb_directories", [])
+            self.assertFalse(
+                any("mariadb_backup_dir" in value for value in directories)
+            )
+        backups = yaml.safe_load((ROOT / "tasks/backup.yml").read_text())
+        directory = next(
+            task["ansible.builtin.file"]
+            for task in backups
+            if task.get("ansible.builtin.file", {}).get("state") == "directory"
+        )
+        self.assertEqual(directory["owner"], "root")
+        self.assertEqual(directory["group"], "root")
+
 
 if __name__ == "__main__":
     unittest.main()

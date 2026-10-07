@@ -89,3 +89,11 @@ their template tasks redact output. Server configuration is readable by the
 The development container runs as `mysql`. Bind mounts and existing data volumes
 must already allow that user to access their contents; do not repair a live data
 volume's permissions as part of routine development tests.
+
+Dependabot merging runs after the named CI workflow completes, on its periodic
+schedule, or on manual dispatch. It executes only trusted default-branch
+metadata processing: it does not check out PR code or consume CI artifacts.
+The GitHub API filters PR authors and supplies the exact commit passed to merge.
+Both compatibility locks use the project-declared Docker SDK 7.2.0 so the
+current Requests transport can connect to the runner's Docker daemon. The backup
+directory is managed only by backup tasks, preventing ownership oscillation.

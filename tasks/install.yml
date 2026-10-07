@@ -62,7 +62,6 @@
     mariadb_directories:
       - "{{ mariadb_data_dir }}"
       - "{{ mariadb_log_dir }}"
-      - "{{ mariadb_backup_dir if mariadb_backup_enabled else '' }}"
 
 - name: Ensure MariaDB service is started and enabled
   ansible.builtin.service:

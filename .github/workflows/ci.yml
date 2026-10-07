@@ -83,6 +83,9 @@ jobs:
           python -m pip install --only-binary=:all: --require-hashes \
             -r requirements/ci-ansible-${{ matrix.ansible }}.txt
 
+      - name: Verify Docker SDK transport
+        run: python -c 'import docker; client = docker.from_env(); assert client.ping(); client.close()'
+
       - name: Run Molecule tests
         run: molecule test -s ${{ matrix.scenario }}
 
@@ -117,6 +120,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --only-binary=:all: --require-hashes -r requirements/ci-ansible-10.0.1.txt
+
+      - name: Verify Docker SDK transport
+        run: python -c 'import docker; client = docker.from_env(); assert client.ping(); client.close()'
 
       - name: Run Molecule tests
         run: molecule test -s ${{ matrix.scenario }}
@@ -155,6 +161,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --only-binary=:all: --require-hashes -r requirements/ci-ansible-10.0.1.txt
+
+      - name: Verify Docker SDK transport
+        run: python -c 'import docker; client = docker.from_env(); assert client.ping(); client.close()'
 
       - name: Run Molecule tests
         run: molecule test
