@@ -18,3 +18,9 @@ venv/
 *.egg-info/
 dist/
 build/
+
+/.ansible/
+
+# Local assistant sessions and isolated worktrees
+.omc/
+.worktrees/

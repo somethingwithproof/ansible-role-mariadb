@@ -5,3 +5,6 @@ tests
 __pycache__
 .ansible
 *.md
+
+# Local assistant state
+.omc
