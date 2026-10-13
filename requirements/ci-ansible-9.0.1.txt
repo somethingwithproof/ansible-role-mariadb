@@ -577,7 +577,7 @@ molecule==6.0.2 \
     # via
     #   -r requirements/ci-ansible-9.0.1.in
     #   molecule-plugins
-molecule-plugins==23.5.0 \
+molecule-plugins[docker]==23.5.0 \
     --hash=sha256:893dba8d077adb30fcd50a5d082300404ced3bb745451bc0927d4a1ada131d31 \
     --hash=sha256:f13ea047b8650c892604b81b76382bc80bb4ae25ea50b23f30e81fd9d5802aff
     # via -r requirements/ci-ansible-9.0.1.in
@@ -592,9 +592,9 @@ pluggy==1.6.0 \
     --hash=sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3 \
     --hash=sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746
     # via molecule
-pycparser==3.0 \
-    --hash=sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29 \
-    --hash=sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992
+pycparser==3.11 \
+    --hash=sha256:51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80 \
+    --hash=sha256:d875f09c3507d00e1aba0eecc6dcadc1352f30fff09dc6bff2f1c2935e97c2bc
     # via cffi
 pygments==2.21.0 \
     --hash=sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9 \
@@ -827,12 +827,6 @@ subprocess-tee==0.4.2 \
     --hash=sha256:21942e976715af4a19a526918adb03a8a27a8edab959f2d075b777e3d78f532d \
     --hash=sha256:91b2b4da3aae9a7088d84acaf2ea0abee3f4fd9c0d2eae69a9b9122a71476590
     # via ansible-compat
-typing-extensions==4.16.0 \
-    --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8 \
-    --hash=sha256:dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5
-    # via
-    #   cryptography
-    #   referencing
 urllib3==2.8.0 \
     --hash=sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3 \
     --hash=sha256:63bf2ead4c879426ebf22ef2a781eeb4aa3b4ae798a0435506f8687fd5bb9b63
