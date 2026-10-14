@@ -3,7 +3,7 @@
 ansible==12.2.0 \
     --hash=sha256:0563dfd33ebd28caf6ccdc7a6d22a7fdafbd9c9c42fefcae5179616a53a35211 \
     --hash=sha256:daafa5c528317f60f68033ad70c59733f4a7548b6255759183cfc7cf422c7fda
-    # via -r requirements/ci-ansible-12.2.0.in
+    # via -r ci-ansible-12.2.0.in
 ansible-compat==26.9.0 \
     --hash=sha256:6756ba0adee1a07d609ede35483fc563b9838df25ec70e57378ae8b564f185cf \
     --hash=sha256:e101649196e4fffc810c3f9f4f185107cc1e5be0ef26d38ad9c4abfa22b0b183
@@ -384,7 +384,7 @@ docker==7.2.0 \
     --hash=sha256:a3f45fdeb9165e2d25d9a1d02ddf3bc70fb572cf5ebbf9b58558c22caf29b71f \
     --hash=sha256:cebb93773d334f778e023a7ee352a8d6e13ab1bd3b863a4d4a59dec897df43ac
     # via
-    #   -r requirements/ci-ansible-12.2.0.in
+    #   -r ci-ansible-12.2.0.in
     #   molecule-plugins
 enrich==1.2.7 \
     --hash=sha256:0a2ab0d2931dff8947012602d1234d2a3ee002d9a355b5d70be6bf5466008893 \
@@ -575,12 +575,12 @@ molecule==6.0.2 \
     --hash=sha256:b919353f799746de60b16a27575627783e39c268fdf2f2aa0372f0162c7b5478 \
     --hash=sha256:f4e941017587d6aadf4c75ec55338d16c17ad6119a2f8306cfe7b9e05d49db11
     # via
-    #   -r requirements/ci-ansible-12.2.0.in
+    #   -r ci-ansible-12.2.0.in
     #   molecule-plugins
 molecule-plugins[docker]==23.5.0 \
     --hash=sha256:893dba8d077adb30fcd50a5d082300404ced3bb745451bc0927d4a1ada131d31 \
     --hash=sha256:f13ea047b8650c892604b81b76382bc80bb4ae25ea50b23f30e81fd9d5802aff
-    # via -r requirements/ci-ansible-12.2.0.in
+    # via -r ci-ansible-12.2.0.in
 packaging==26.3 \
     --hash=sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79 \
     --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
