@@ -3,10 +3,10 @@
 ansible==12.2.0 \
     --hash=sha256:0563dfd33ebd28caf6ccdc7a6d22a7fdafbd9c9c42fefcae5179616a53a35211 \
     --hash=sha256:daafa5c528317f60f68033ad70c59733f4a7548b6255759183cfc7cf422c7fda
-    # via -r ci-ansible-10.0.1.in
-ansible-compat==26.6.0 \
-    --hash=sha256:739c4d10c791000c4b353f5e725e9ebafb6384dbeb00b94c7c8ac3ee2c172337 \
-    --hash=sha256:ad00d3cff84a961165a7dd90f175fd9a4584e2e602e9d8af2062ce7c479dd350
+    # via -r requirements/ci-ansible-10.0.1.in
+ansible-compat==26.10.0 \
+    --hash=sha256:700f0778fbb348daf6ee58941871e8ca77a987702993e8bf7895761d036d6450 \
+    --hash=sha256:b0fcc0b9585611045b4b91268d3b4337c9159ae0dc550b69a553a33af48af826
     # via molecule
 ansible-core==2.19.14 \
     --hash=sha256:1e7612788eaa6b3c87a3670ce86c64b830eba0ae2b3fcb25a772f276704163b4 \
@@ -21,9 +21,9 @@ attrs==26.1.0 \
     # via
     #   jsonschema
     #   referencing
-bracex==3.0.1 \
-    --hash=sha256:4e38e32392e4a4780fe15d644bfc7c8514057cfc3861e060b11814ce829c25e4 \
-    --hash=sha256:6523ad83aeb5098a4ee597cff0f964442ff74e460bd3fafaffab6a013ff2288c
+bracex==3.1 \
+    --hash=sha256:35c69fc105f08d77c02722e8ae707c656ff298dd4d26c89bcb3c98fca8bc3614 \
+    --hash=sha256:52002b8455658c21f3b6e5eb0f662b57ec9085f42709e58bc86eeab5bc4c37d7
     # via wcmatch
 certifi==2026.7.22 \
     --hash=sha256:62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775 \
@@ -384,7 +384,7 @@ docker==7.2.0 \
     --hash=sha256:a3f45fdeb9165e2d25d9a1d02ddf3bc70fb572cf5ebbf9b58558c22caf29b71f \
     --hash=sha256:cebb93773d334f778e023a7ee352a8d6e13ab1bd3b863a4d4a59dec897df43ac
     # via
-    #   -r ci-ansible-10.0.1.in
+    #   -r requirements/ci-ansible-10.0.1.in
     #   molecule-plugins
 enrich==1.2.7 \
     --hash=sha256:0a2ab0d2931dff8947012602d1234d2a3ee002d9a355b5d70be6bf5466008893 \
@@ -575,12 +575,12 @@ molecule==6.0.2 \
     --hash=sha256:b919353f799746de60b16a27575627783e39c268fdf2f2aa0372f0162c7b5478 \
     --hash=sha256:f4e941017587d6aadf4c75ec55338d16c17ad6119a2f8306cfe7b9e05d49db11
     # via
-    #   -r ci-ansible-10.0.1.in
+    #   -r requirements/ci-ansible-10.0.1.in
     #   molecule-plugins
 molecule-plugins[docker]==23.5.0 \
     --hash=sha256:893dba8d077adb30fcd50a5d082300404ced3bb745451bc0927d4a1ada131d31 \
     --hash=sha256:f13ea047b8650c892604b81b76382bc80bb4ae25ea50b23f30e81fd9d5802aff
-    # via -r ci-ansible-10.0.1.in
+    # via -r requirements/ci-ansible-10.0.1.in
 packaging==26.3 \
     --hash=sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79 \
     --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
@@ -588,9 +588,9 @@ packaging==26.3 \
     #   ansible-compat
     #   ansible-core
     #   molecule
-pluggy==1.6.0 \
-    --hash=sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3 \
-    --hash=sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746
+pluggy==1.7.0 \
+    --hash=sha256:7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec \
+    --hash=sha256:d1eaa46ebb595891b860ab086b4d09c8588af65ebd4361b8e8f4bb8920b90ba8
     # via molecule
 pycparser==3.11 \
     --hash=sha256:51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80 \
@@ -690,9 +690,9 @@ requests==2.34.2 \
     # via
     #   docker
     #   molecule-plugins
-resolvelib==1.0.1 \
-    --hash=sha256:04ce76cbd63fded2078ce224785da6ecd42b9564b1390793f64ddecbe997b309 \
-    --hash=sha256:d2da45d1a8dfee81bdd591647783e340ef3bcb104b54c383f70d422ef5cc7dbf
+resolvelib==1.2.1 \
+    --hash=sha256:7d08a2022f6e16ce405d60b68c390f054efcfd0477d4b9bd019cc941c28fad1c \
+    --hash=sha256:fb06b66c8da04172d9e72a21d7d06186d8919e32ae5ab5cdf5b9d920be805ac2
     # via ansible-core
 rich==15.0.0 \
     --hash=sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb \
@@ -833,7 +833,7 @@ urllib3==2.8.0 \
     # via
     #   docker
     #   requests
-wcmatch==11.0.1 \
-    --hash=sha256:1ea2b4fa678b8ca268253798d5963935df39132d47c3e241c0a0732224005e7d \
-    --hash=sha256:fd149ecddb9f0a88ea780017d6dde17c994e494e7f7303d4e3c9d6251f978f4b
+wcmatch==11.1 \
+    --hash=sha256:2863afee97a7dd62e64f7feada864848c1a5e31cb331b3aa530fa1300d2d5d3c \
+    --hash=sha256:f2b6f0fad6f5e2571498723fcb3c8facdd0fba0dcc139f31d32f592eb648153e
     # via molecule
