@@ -308,12 +308,6 @@ charset-normalizer==3.5.2 \
 click==8.5.0 \
     --hash=sha256:255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360 \
     --hash=sha256:ba0d2089de75ea0310e2dde03160e6ca10009947fb95a182f9b54021bb272e34
-    # via
-    #   click-help-colors
-    #   molecule
-click-help-colors==0.9.4 \
-    --hash=sha256:b33c5803eeaeb084393b1ab5899dc5476c7196b87a18713045afe76f840b42db \
-    --hash=sha256:f4cabe52cf550299b8888f4f2ee4c5f359ac27e33bcfe4d61db47785a5cc936c
     # via molecule
 cryptography==50.0.2 \
     --hash=sha256:0ddc924c04591c2811ca024d62ecad4f7f6f08af8939c211438f48a16bd23602 \
@@ -571,9 +565,9 @@ mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
     # via markdown-it-py
-molecule==6.0.2 \
-    --hash=sha256:b919353f799746de60b16a27575627783e39c268fdf2f2aa0372f0162c7b5478 \
-    --hash=sha256:f4e941017587d6aadf4c75ec55338d16c17ad6119a2f8306cfe7b9e05d49db11
+molecule==26.10.0 \
+    --hash=sha256:32533aaba78c29eed80bcaab5d03ff63fe48b8f43071cf77953f391e0732d439 \
+    --hash=sha256:deb351b11f1b329ae3b3c856d5b1c1d9a9d8f8d40ba717c77e54b1778b4557d2
     # via
     #   -r requirements/ci-ansible-12.2.0.in
     #   molecule-plugins
