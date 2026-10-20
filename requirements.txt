@@ -10,7 +10,7 @@ molecule==26.9.0
 molecule-plugins[docker]==26.9.28
 pytest>=9.1.1
 pytest-testinfra>=10.2.2
-ansible-lint==26.9.0
+ansible-lint==26.10.1
 yamllint==1.38.0
 
 # Docker support
