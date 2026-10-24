@@ -571,9 +571,9 @@ molecule==26.10.0 \
     # via
     #   -r requirements/ci-ansible-12.2.0.in
     #   molecule-plugins
-molecule-plugins[docker]==23.5.0 \
-    --hash=sha256:893dba8d077adb30fcd50a5d082300404ced3bb745451bc0927d4a1ada131d31 \
-    --hash=sha256:f13ea047b8650c892604b81b76382bc80bb4ae25ea50b23f30e81fd9d5802aff
+molecule-plugins[docker]==26.10.12 \
+    --hash=sha256:03f79df9f7d6d6107ad9507f6c58724bbd18c21afb6f020fc532361b343ea333 \
+    --hash=sha256:a618b60016eac397d8e279eeb5c494a9cee6d33103dbe5222891df81657759f1
     # via -r requirements/ci-ansible-12.2.0.in
 packaging==26.3 \
     --hash=sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79 \
