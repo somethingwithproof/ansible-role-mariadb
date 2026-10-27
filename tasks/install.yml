@@ -75,7 +75,7 @@
     state: directory
     owner: root
     group: root
-    mode: '0755'
+    mode: '0700'
 
 - name: Configure the MariaDB automatic restart policy
   ansible.builtin.copy:
@@ -85,7 +85,7 @@
       Restart={{ 'on-failure' if mariadb_auto_restart | bool else 'no' }}
     owner: root
     group: root
-    mode: '0644'
+    mode: '0600'
   register: mariadb_restart_policy
 
 - name: Ensure MariaDB service is started and enabled

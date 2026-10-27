@@ -11,7 +11,7 @@
     - name: Query the installed server and test database with the application user
       community.mysql.mysql_query:
         login_user: molecule_lts
-        login_password: MoleculeUser123!
+        login_password: "{{ mariadb_users[0].password }}"
         login_db: molecule_lts
         query: "SELECT VERSION() AS version, DATABASE() AS database_name"
       register: mariadb_lts_query
