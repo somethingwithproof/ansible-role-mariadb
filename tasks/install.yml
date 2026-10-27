@@ -1,6 +1,12 @@
 ---
 # Tasks for installing MariaDB
 
+- name: Refresh Debian package metadata before installing prerequisites
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == 'Debian'
+
 - name: Ensure prerequisite packages are installed
   ansible.builtin.package:
     name: "{{ mariadb_prerequisite_packages }}"
@@ -50,6 +56,85 @@
   retries: 3
   delay: 5
 
+- name: Install the scheduler for enabled operational tasks
+  ansible.builtin.package:
+    name: "{{ 'cron' if ansible_facts.os_family == 'Debian' else 'cronie' }}"
+    state: present
+  when: mariadb_backup_enabled | bool or mariadb_monitoring_enabled | bool
+
+- name: Start the scheduler for enabled operational tasks
+  ansible.builtin.service:
+    name: "{{ 'cron' if ansible_facts.os_family == 'Debian' else 'crond' }}"
+    state: started
+    enabled: true
+  when: mariadb_backup_enabled | bool or mariadb_monitoring_enabled | bool
+
+- name: Ensure the MariaDB systemd override directory exists
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ mariadb_service_name }}.service.d"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure the MariaDB automatic restart policy
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/{{ mariadb_service_name }}.service.d/10-ansible-restart.conf"
+    content: |
+      [Service]
+      Restart={{ 'on-failure' if mariadb_auto_restart | bool else 'no' }}
+    owner: root
+    group: root
+    mode: '0644'
+  register: mariadb_restart_policy
+
+- name: Ensure MariaDB service is started and enabled
+  ansible.builtin.systemd_service:
+    daemon_reload: "{{ mariadb_restart_policy.changed }}"
+    name: "{{ mariadb_service_name }}"
+    state: "{{ mariadb_service_state }}"
+    enabled: "{{ mariadb_service_enabled }}"
+
+- name: Discover the running database without changing its storage
+  block:
+    - name: Read the data directory using existing local administrator access
+      community.mysql.mysql_query:
+        login_user: root
+        login_unix_socket: "{{ mariadb_socket }}"
+        query: >-
+          SELECT @@datadir AS data_dir,
+          SUBSTRING_INDEX(VERSION(), '-', 1) AS server_version
+      register: mariadb_data_directory_query
+      changed_when: false
+      no_log: true
+  rescue:
+    - name: Read the data directory using the supplied root credentials
+      community.mysql.mysql_query:
+        login_user: root
+        login_password: "{{ mariadb_root_password }}"
+        login_unix_socket: "{{ mariadb_socket }}"
+        config_file: ''
+        query: >-
+          SELECT @@datadir AS data_dir,
+          SUBSTRING_INDEX(VERSION(), '-', 1) AS server_version
+      register: mariadb_data_directory_query
+      changed_when: false
+      no_log: true
+
+- name: Retain the existing data directory when inventory does not override it
+  ansible.builtin.set_fact:
+    mariadb_current_data_dir: "{{ mariadb_data_directory_query.query_result[0][0].data_dir | regex_replace('/$', '') }}"
+    mariadb_running_version: "{{ mariadb_data_directory_query.query_result[0][0].server_version }}"
+
+- name: Require an explicit migration before changing database data directories
+  ansible.builtin.assert:
+    that:
+      - mariadb_data_dir | regex_replace('/$', '') == mariadb_current_data_dir
+    fail_msg: >-
+      The running database uses {{ mariadb_current_data_dir }} but inventory
+      requests {{ mariadb_data_dir }}. Migrate the database explicitly before
+      changing its data directory; this role does not move existing data.
+
 - name: Ensure MariaDB directories exist with correct permissions
   ansible.builtin.file:
     path: "{{ item }}"
@@ -62,9 +147,3 @@
     mariadb_directories:
       - "{{ mariadb_data_dir }}"
       - "{{ mariadb_log_dir }}"
-
-- name: Ensure MariaDB service is started and enabled
-  ansible.builtin.service:
-    name: "{{ mariadb_service_name }}"
-    state: "{{ mariadb_service_state }}"
-    enabled: "{{ mariadb_service_enabled }}"

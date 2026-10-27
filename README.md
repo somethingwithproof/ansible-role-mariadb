@@ -49,13 +49,34 @@ Provide the referenced password variables through Ansible Vault or your secret-m
 
 ## Requirements and compatibility
 
-[Role metadata](meta/main.yml) declares Ansible 9.0.0 as its minimum and lists Ubuntu, Debian, and EL platform targets. [Requirements](requirements.txt), [development requirements](requirements-dev.txt), and [CI](.github/workflows/ci.yml) define the tool versions and configured test matrix. Declared targets and test scenarios do not establish a passing compatibility matrix for every OS or MariaDB release.
+The current controller is Ansible 14.5.0 / ansible-core 2.21.5 with Python
+3.13. The `lts` scenario exercises native distribution packages on Ubuntu
+22.04, 24.04 and 26.04, Debian 12 and 13, and Rocky Linux 9 and 10. EL aliases
+in metadata do not establish separate RHEL or AlmaLinux certification.
+
+Ubuntu 26.04, Debian 13 and EL10 default to native packages. Set
+`mariadb_configure_repo: false` to use native packages on older maintained
+releases too. Existing older-release repository selection stays compatible;
+review and explicitly select a vendor-supported repository release before
+opting into the external repository path. The legacy `mariadb_version` value
+selects that external repository, not the native server version.
+
+The role discovers the running server's version and data directory before
+writing configuration. This preserves Ubuntu 26.04's `/var/lib/mariadb` and
+existing database storage. An explicit conflicting `mariadb_data_dir` fails
+with a migration requirement; the role does not move data. Public package,
+service, socket and configuration-file overrides remain available.
+
+Password changes use parameterized statements so MariaDB can enforce its
+strict password-validation plugin. Root's private client file uses the local
+Unix socket. Unchanged accounts retain their grants and passwords.
 
 ## Development and testing
 
 ```bash
 make lint
 make molecule-test
+mise exec python@3.13 -- molecule test -s lts
 make backup-test
 make monitoring-test
 make version-matrix-test

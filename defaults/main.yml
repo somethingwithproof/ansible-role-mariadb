@@ -1,29 +1,38 @@
 ---
 # Global MariaDB configuration
 mariadb_enabled: true
+mariadb_service_name: "{{ mariadb_platform_service_name }}"
 mariadb_service_state: started
 mariadb_service_enabled: true
 
 # Installation
 mariadb_version: "10.6"
-mariadb_packages:
-  - mariadb-server
-  - mariadb-client
-  - python3-mysqldb
+mariadb_packages: "{{ mariadb_platform_packages }}"
+mariadb_prerequisite_packages: "{{ mariadb_platform_prerequisite_packages }}"
 mariadb_additional_packages: []
 
 # Repository
-mariadb_configure_repo: true
+# New OS releases use their maintained native server packages by default.
+# Older deployments retain the existing repository-selection behavior.
+mariadb_configure_repo: >-
+  {{ not ((ansible_facts.distribution == 'Ubuntu'
+           and ansible_facts.distribution_major_version | int >= 26)
+          or (ansible_facts.distribution == 'Debian'
+              and ansible_facts.distribution_major_version | int >= 13)
+          or (ansible_facts.os_family == 'RedHat'
+              and ansible_facts.distribution_major_version | int >= 10)) }}
 mariadb_repo_version: "{{ mariadb_version }}"
 mariadb_repo_keyserver: "keyserver.ubuntu.com"
 mariadb_repo_key: "0xF1656F24C74CD1D8"
 
 # Paths
-mariadb_config_dir: /etc/mysql
-mariadb_data_dir: /var/lib/mysql
+mariadb_config_dir: "{{ mariadb_platform_config_dir | default('/etc/mysql') }}"
+mariadb_config_file: >-
+  {{ mariadb_platform_config_file | default(mariadb_config_dir ~ '/mariadb.conf.d/99-ansible-managed.cnf') }}
+mariadb_data_dir: "{{ mariadb_current_data_dir | default('/var/lib/mysql') }}"
 mariadb_log_dir: /var/log/mysql
 mariadb_pid_file: /var/run/mysqld/mysqld.pid
-mariadb_socket: /var/run/mysqld/mysqld.sock
+mariadb_socket: "{{ mariadb_platform_socket | default('/var/run/mysqld/mysqld.sock') }}"
 
 # Networking
 mariadb_bind_address: "127.0.0.1"

@@ -3,18 +3,18 @@
   hosts: all
   become: true
   vars:
-    mariadb_root_password: "molecule_test_password"
+    mariadb_root_password: "MoleculeTest123!"
     mariadb_databases:
       - name: monitoring_test_db
         encoding: utf8mb4
         collation: utf8mb4_unicode_ci
     mariadb_users:
       - name: monitoring_test_user
-        password: monitoring_test_password
+        password: MonitoringTest123!
         priv: "monitoring_test_db.*:ALL"
     mariadb_monitoring_enabled: true
     mariadb_monitoring_user: "mysql_exporter"
-    mariadb_monitoring_password: "exporter_password"
+    mariadb_monitoring_password: "ExporterPass123!"
     mariadb_exporter_enabled: true
     mariadb_exporter_port: 9104
   roles:

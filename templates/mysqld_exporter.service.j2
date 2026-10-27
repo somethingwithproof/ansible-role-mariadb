@@ -7,7 +7,6 @@ After={{ mariadb_service_name }}.service
 Type=simple
 User=mysql-exporter
 Group=mysql-exporter
-Environment=DATA_SOURCE_NAME="{{ mariadb_monitoring_user }}:{{ mariadb_monitoring_password }}@({{ mariadb_bind_address }}:{{ mariadb_port }})/"
 ExecStart=/usr/local/bin/mysqld_exporter \
   --config.my-cnf=/etc/mysql_exporter.my.cnf \
   --web.listen-address=:{{ mariadb_exporter_port }} \

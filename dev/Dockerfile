@@ -10,7 +10,9 @@ ENV MARIADB_USER=dbuser
 ENV MARIADB_PASSWORD=dbpassword
 
 # Copy custom configuration
-COPY templates/mariadb.cnf.j2 /etc/mysql/mariadb.conf.d/99-custom.cnf
+COPY files/custom.cnf /etc/mysql/mariadb.conf.d/99-custom.cnf
+
+RUN mkdir -p /var/log/mysql && chown mysql:mysql /var/log/mysql
 
 # Expose port
 EXPOSE 3306

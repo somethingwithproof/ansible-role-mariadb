@@ -1,0 +1,124 @@
+---
+- name: Verify the native LTS database contract
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check the service is active
+      ansible.builtin.command: systemctl is-active mariadb
+      changed_when: false
+
+    - name: Query the installed server and test database with the application user
+      community.mysql.mysql_query:
+        login_user: molecule_lts
+        login_password: MoleculeUser123!
+        login_db: molecule_lts
+        query: "SELECT VERSION() AS version, DATABASE() AS database_name"
+      register: mariadb_lts_query
+      no_log: true
+
+    - name: Require a working database and user
+      ansible.builtin.assert:
+        that:
+          - mariadb_lts_query.query_result[0][0].database_name == 'molecule_lts'
+          - mariadb_lts_query.query_result[0][0].version is search('MariaDB')
+
+    - name: Verify root credentials stay private
+      ansible.builtin.stat:
+        path: /root/.my.cnf
+      register: mariadb_lts_root_config
+
+    - name: Require private administrator credentials
+      ansible.builtin.assert:
+        that:
+          - mariadb_lts_root_config.stat.mode == '0600'
+          - mariadb_lts_root_config.stat.pw_name == 'root'
+
+    - name: Check active MariaDB password validation
+      community.mysql.mysql_query:
+        login_unix_socket: >-
+          {{ '/var/lib/mysql/mysql.sock' if ansible_facts.os_family == 'RedHat'
+             else '/run/mysqld/mysqld.sock' }}
+        query: >-
+          SELECT COUNT(*) AS active FROM information_schema.PLUGINS
+          WHERE PLUGIN_NAME = 'simple_password_check' AND PLUGIN_STATUS = 'ACTIVE'
+      register: mariadb_lts_plugin
+      no_log: true
+
+    - name: Require the password policy to survive service restarts
+      ansible.builtin.assert:
+        that: mariadb_lts_plugin.query_result[0][0].active | int == 1
+
+    - name: Require server-side rejection of weak new passwords
+      block:
+        - name: Attempt to create a deliberately weak disposable account
+          community.mysql.mysql_query:
+            query: "CREATE USER 'molecule_weak'@'localhost' IDENTIFIED BY 'weak'"
+          register: mariadb_weak_password
+          ignore_errors: true
+          no_log: true
+
+        - name: Require strict password validation to reject the account
+          ansible.builtin.assert:
+            that: mariadb_weak_password is failed
+      always:
+        - name: Remove the disposable password-policy test account
+          community.mysql.mysql_query:
+            query: "DROP USER IF EXISTS 'molecule_weak'@'localhost'"
+          no_log: true
+
+    - name: Verify credential rotation and storage safety on the newest Ubuntu
+      when: ansible_facts.distribution == 'Ubuntu' and ansible_facts.distribution_major_version == '26'
+      block:
+        - name: Rotate the disposable root credential with validation already active
+          ansible.builtin.include_role:
+            name: thomasvincent.mariadb
+            tasks_from: secure.yml
+          vars:
+            mariadb_root_password: MoleculeRotated123!
+
+        - name: Authenticate with the rotated credential without a client file
+          community.mysql.mysql_query:
+            login_user: root
+            login_password: MoleculeRotated123!
+            login_unix_socket: /run/mysqld/mysqld.sock
+            config_file: ''
+            query: "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = 'molecule_lts'"
+          register: mariadb_rotated_database
+          no_log: true
+
+        - name: Require the existing database to survive password rotation
+          ansible.builtin.assert:
+            that: mariadb_rotated_database.query_result[0] | length == 1
+
+        - name: Restore the disposable root credential
+          ansible.builtin.include_role:
+            name: thomasvincent.mariadb
+            tasks_from: secure.yml
+          vars:
+            mariadb_root_password: MoleculeRoot123!
+
+        - name: Exercise the implicit data migration guard
+          block:
+            - name: Request a conflicting data directory in the disposable fixture
+              ansible.builtin.include_role:
+                name: thomasvincent.mariadb
+              vars:
+                mariadb_data_dir: /var/lib/molecule-migration-required
+
+            - name: Reject a successful implicit migration
+              ansible.builtin.fail:
+                msg: The role accepted an implicit data migration
+          rescue:
+            - name: Require the expected storage guard failure
+              ansible.builtin.assert:
+                that: "'Migrate the database explicitly' in ansible_failed_result.msg"
+
+        - name: Inspect the rejected destination
+          ansible.builtin.stat:
+            path: /var/lib/molecule-migration-required
+          register: mariadb_rejected_directory
+
+        - name: Require the migration guard to leave storage untouched
+          ansible.builtin.assert:
+            that: not mariadb_rejected_directory.stat.exists

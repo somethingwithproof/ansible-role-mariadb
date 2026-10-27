@@ -3,9 +3,9 @@
   hosts: all
   become: true
   vars:
-    mariadb_root_password: "molecule_test_password"
+    mariadb_root_password: "MoleculeTest123!"
     mariadb_monitoring_user: "mysql_exporter"
-    mariadb_monitoring_password: "exporter_password"
+    mariadb_monitoring_password: "ExporterPass123!"
   tasks:
     - name: Check if MariaDB service is running
       ansible.builtin.service_facts:
@@ -44,7 +44,7 @@
 
     - name: Check monitoring user exists
       ansible.builtin.shell: >
-        mysql -u root -p{{ mariadb_root_password }} -e
+        mariadb -u root -p{{ mariadb_root_password }} -e
         "SELECT user FROM mysql.user WHERE user = '{{ mariadb_monitoring_user }}';"
       register: monitoring_user
       changed_when: false
@@ -57,7 +57,7 @@
 
     - name: Check monitoring user has proper permissions
       ansible.builtin.shell: >
-        mysql -u root -p{{ mariadb_root_password }} -e
+        mariadb -u root -p{{ mariadb_root_password }} -e
         "SHOW GRANTS FOR '{{ mariadb_monitoring_user }}'@'localhost';"
       register: monitoring_grants
       changed_when: false

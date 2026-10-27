@@ -21,15 +21,21 @@
         login_user: root
         login_password: "{{ mariadb_root_password }}"
       loop:
-        - { variable: 'log_bin', value: 'ON' }
         - { variable: 'binlog_format', value: 'ROW' }
         - { variable: 'sync_binlog', value: '1' }
         - { variable: 'expire_logs_days', value: '7' }
 
+    - name: Validate the replication account password on the server
+      ansible.builtin.include_tasks: account_password.yml
+      vars:
+        mariadb_account_name: "{{ mariadb_replication_user }}"
+        mariadb_account_host: "%"
+        mariadb_account_password: "{{ mariadb_replication_password }}"
+      no_log: true
+
     - name: Create replication user
       community.mysql.mysql_user:
         name: "{{ mariadb_replication_user }}"
-        password: "{{ mariadb_replication_password }}"
         host: "%"
         priv: "*.*:REPLICATION SLAVE"
         state: present

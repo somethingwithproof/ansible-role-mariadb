@@ -1,0 +1,4 @@
+**
+!tests
+!tests/helpers
+!tests/helpers/test_replication.sh

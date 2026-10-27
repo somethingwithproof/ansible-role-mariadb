@@ -8,21 +8,15 @@ galaxy_info:
     database management with replication, backup, and monitoring support.
   company: Enterprise Inc.
   license: MIT
-  min_ansible_version: "9.0.0"
+  min_ansible_version: "2.21"
 
   platforms:
     - name: Ubuntu
-      versions:
-        - focal     # 20.04 – supported until April 2025
-        - jammy     # 22.04 – LTS, supported until 2027
+      versions: [jammy, noble, resolute]
     - name: Debian
-      versions:
-        - bullseye  # 11 – LTS until June 2026
-        - bookworm  # 12 – stable, supported until 2028
-    - name: EL  # Enterprise Linux: RHEL, Rocky, Alma
-      versions:
-        - "8"       # Supported until May 2029
-        - "9"       # Supported until at least 2032
+      versions: [bookworm, trixie]
+    - name: EL
+      versions: ["9", "10"]
 
   galaxy_tags:
     - backup

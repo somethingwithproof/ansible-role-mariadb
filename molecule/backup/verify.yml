@@ -3,7 +3,7 @@
   hosts: all
   become: true
   vars:
-    mariadb_root_password: "molecule_test_password"
+    mariadb_root_password: "MoleculeTest123!"
   tasks:
     - name: Check if MariaDB service is running
       ansible.builtin.service_facts:
@@ -25,7 +25,7 @@
 
     - name: Check backup script exists
       ansible.builtin.stat:
-        path: "{{ mariadb_backup_dir }}/mysql_backup.sh"
+        path: "/usr/local/bin/mariadb_backup.sh"
       register: backup_script
 
     - name: Verify backup script exists and is executable
@@ -35,6 +35,10 @@
           - backup_script.stat.executable
         fail_msg: "Backup script does not exist or is not executable"
         success_msg: "Backup script exists and is executable"
+
+    - name: Trigger a backup before exercising restore
+      ansible.builtin.command: "/usr/local/bin/mariadb_backup.sh"
+      changed_when: true
 
     - name: Check for backup files
       ansible.builtin.find:
@@ -56,7 +60,7 @@
 
     - name: Verify backup cron job is configured
       ansible.builtin.assert:
-        that: "'mysql_backup.sh' in cron_contents.stdout"
+        that: "'mariadb_backup.sh' in cron_contents.stdout"
         fail_msg: "Backup cron job is not configured"
         success_msg: "Backup cron job is correctly configured"
 
@@ -64,19 +68,20 @@
       block:
         - name: Drop test table
           ansible.builtin.shell: >
-            mysql -u root -p{{ mariadb_root_password }} backup_test_db -e "DROP TABLE test_table;"
+            mariadb -u root -p{{ mariadb_root_password }} backup_test_db -e "DROP TABLE test_table;"
           changed_when: true
 
         - name: Verify table is gone
           ansible.builtin.shell: >
-            mysql -u root -p{{ mariadb_root_password }} backup_test_db -e "SHOW TABLES LIKE 'test_table';"
+            mariadb -u root -p{{ mariadb_root_password }} backup_test_db -e "SHOW TABLES LIKE 'test_table';"
           register: table_check
           changed_when: false
           failed_when: "'test_table' in table_check.stdout"
 
         - name: Get most recent backup file
           ansible.builtin.shell: >
-            find {{ mariadb_backup_dir }} -name "*.sql*" -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -f2- -d" "
+            find {{ mariadb_backup_dir }} -name "*-backup_test_db-*.sql*" -type f
+            -printf '%T@ %p\n' | sort -n | tail -1 | cut -f2- -d" "
           register: latest_backup
           changed_when: false
 
@@ -92,13 +97,13 @@
 
         - name: Restore from backup
           ansible.builtin.shell: >
-            mysql -u root -p{{ mariadb_root_password }} backup_test_db < /tmp/backup_restore.sql
+            mariadb -u root -p{{ mariadb_root_password }} backup_test_db < /tmp/backup_restore.sql
           changed_when: true
           when: latest_backup.stdout != ""
 
         - name: Check if table was restored
           ansible.builtin.shell: >
-            mysql -u root -p{{ mariadb_root_password }} backup_test_db -e "SELECT COUNT(*) FROM test_table;"
+            mariadb -u root -p{{ mariadb_root_password }} backup_test_db -e "SELECT COUNT(*) FROM test_table;"
           register: restored_data
           changed_when: false
           when: latest_backup.stdout != ""

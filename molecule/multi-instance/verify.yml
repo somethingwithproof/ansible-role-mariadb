@@ -3,7 +3,7 @@
   hosts: primary
   become: true
   vars:
-    mariadb_root_password: "molecule_test_password"
+    mariadb_root_password: "MoleculeTest123!"
   tasks:
     - name: Check if MariaDB service is running on primary
       ansible.builtin.service_facts:
@@ -24,7 +24,7 @@
         success_msg: "MariaDB service is running on primary"
 
     - name: Check primary has binlog enabled
-      ansible.builtin.shell: mysql -u root -p{{ mariadb_root_password }} -e "SHOW MASTER STATUS;"
+      ansible.builtin.shell: mariadb -u root -p{{ mariadb_root_password }} -e "SHOW MASTER STATUS;"
       register: master_status
       changed_when: false
 
@@ -36,7 +36,7 @@
 
     - name: Get replication user grants
       ansible.builtin.shell: >
-        mysql -u root -p{{ mariadb_root_password }} -e
+        mariadb -u root -p{{ mariadb_root_password }} -e
         "SHOW GRANTS FOR '{{ mariadb_replication_user }}'@'%';"
       register: replication_grants
       changed_when: false
@@ -51,7 +51,7 @@
   hosts: replica
   become: true
   vars:
-    mariadb_root_password: "molecule_test_password"
+    mariadb_root_password: "MoleculeTest123!"
   tasks:
     - name: Check if MariaDB service is running on replica
       ansible.builtin.service_facts:
@@ -72,7 +72,7 @@
         success_msg: "MariaDB service is running on replica"
 
     - name: Check replica status
-      ansible.builtin.shell: mysql -u root -p{{ mariadb_root_password }} -e "SHOW SLAVE STATUS\G"
+      ansible.builtin.shell: mariadb -u root -p{{ mariadb_root_password }} -e "SHOW SLAVE STATUS\G"
       register: slave_status
       changed_when: false
 
@@ -90,7 +90,7 @@
 
     - name: Check if data replicated
       ansible.builtin.shell: >
-        mysql -u root -p{{ mariadb_root_password }} replication_test_db -e
+        mariadb -u root -p{{ mariadb_root_password }} replication_test_db -e
         "SELECT COUNT(*) FROM replicated_table WHERE message = 'replication test data';"
       register: replication_data
       changed_when: false

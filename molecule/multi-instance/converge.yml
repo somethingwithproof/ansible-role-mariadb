@@ -5,21 +5,53 @@
   roles:
     - role: thomasvincent.mariadb
 
-# Setup test data in the primary for replication testing
-- name: Create test data on primary
-  hosts: primary
-  become: true
+# Replica initialization is a disposable test fixture, not a role feature.
+- name: Initialize disposable replication fixtures
+  hosts: replica
   tasks:
-    - name: Create a test table
-      ansible.builtin.shell: >
-        mysql -u root -p{{ mariadb_root_password }} replication_test_db -e
-        "CREATE TABLE IF NOT EXISTS replicated_table (id INT AUTO_INCREMENT PRIMARY KEY,
-        message VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"
-      changed_when: false
+    - name: Inspect existing replica configuration
+      community.mysql.mysql_replication:
+        mode: getreplica
+      register: mariadb_fixture_replica
 
-    - name: Insert test data
-      ansible.builtin.shell: >
-        mysql -u root -p{{ mariadb_root_password }} replication_test_db -e
-        "INSERT INTO replicated_table (message) VALUES ('replication test data');"
-      changed_when: false
+    - name: Read the primary binary log position
+      community.mysql.mysql_replication:
+        mode: getprimary
+      delegate_to: primary
+      register: mariadb_fixture_primary
+      when: mariadb_fixture_replica.Is_Replica | default(false) == false
+
+    - name: Connect the disposable replica to its primary
+      community.mysql.mysql_replication:
+        mode: changeprimary
+        primary_host: primary
+        primary_user: "{{ mariadb_replication_user }}"
+        primary_password: "{{ mariadb_replication_password }}"
+        primary_log_file: "{{ mariadb_fixture_primary.File }}"
+        primary_log_pos: "{{ mariadb_fixture_primary.Position }}"
+      when: mariadb_fixture_replica.Is_Replica | default(false) == false
+      no_log: true
+
+    - name: Start disposable replication
+      community.mysql.mysql_replication:
+        mode: startreplica
+      when: mariadb_fixture_replica.Is_Replica | default(false) == false
+
+- name: Create deterministic test data on the primary
+  hosts: primary
+  tasks:
+    - name: Create the replicated test table when absent
+      community.mysql.mysql_query:
+        login_db: replication_test_db
+        query: >-
+          CREATE TABLE IF NOT EXISTS replicated_table
+          (id INT PRIMARY KEY, message VARCHAR(255))
+      register: mariadb_fixture_table
+      changed_when: mariadb_fixture_table.rowcount[0] | int > 0
+
+    - name: Insert the replicated test row once
+      community.mysql.mysql_query:
+        login_db: replication_test_db
+        query: "INSERT IGNORE INTO replicated_table VALUES (1, 'replication test data')"
+      register: mariadb_fixture_row
+      changed_when: mariadb_fixture_row.rowcount[0] | int > 0

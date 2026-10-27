@@ -23,7 +23,7 @@ ENCRYPTION_KEY="{{ mariadb_backup_encryption_key }}"
 mkdir -p "$BACKUP_DIR"
 
 # Get list of databases
-DATABASES=$(mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "SHOW DATABASES;" | grep -Ev "(Database|information_schema|performance_schema)")
+DATABASES=$(mariadb -u$MYSQL_USER -p$MYSQL_PASSWORD -e "SHOW DATABASES;" | grep -Ev "(Database|information_schema|performance_schema)")
 
 # Log start
 echo "[$DATE] Starting MariaDB backup..."
@@ -34,7 +34,7 @@ for DB in $DATABASES; do
   BACKUP_FILE="$BACKUP_DIR/$HOSTNAME-$DB-$DATE.sql"
 
   # Export database
-  mysqldump -u$MYSQL_USER -p$MYSQL_PASSWORD --single-transaction --quick --routines --triggers --events "$DB" > "$BACKUP_FILE"
+  mariadb-dump -u$MYSQL_USER -p$MYSQL_PASSWORD --single-transaction --quick --routines --triggers --events "$DB" > "$BACKUP_FILE"
 
   # Compress backup
   if [ "$BACKUP_FORMAT" == "gzip" ]; then
