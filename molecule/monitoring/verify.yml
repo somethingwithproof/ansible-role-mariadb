@@ -91,3 +91,8 @@
         fail_msg: "mysqld_exporter is not exposing metrics"
         success_msg: "mysqld_exporter is correctly exposing metrics"
       when: port_check.failed == false and exporter_metrics is defined
+
+    - name: Exercise the installed local monitoring script
+      ansible.builtin.command: /usr/local/bin/mariadb_monitoring.sh
+      changed_when: false
+      no_log: true
