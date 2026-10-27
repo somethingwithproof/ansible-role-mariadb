@@ -70,17 +70,25 @@
     - name: Verify credential rotation and storage safety on the newest Ubuntu
       when: ansible_facts.distribution == 'Ubuntu' and ansible_facts.distribution_major_version == '26'
       block:
-        - name: Rotate the disposable root credential with validation already active
-          ansible.builtin.include_role:
-            name: "{{ playbook_dir }}/../.."
-            tasks_from: secure.yml
-          vars:
-            mariadb_root_password: MoleculeRotated123!
+        - name: Rotate the disposable root credential through the real secure tag
+          ansible.builtin.command:
+            argv:
+              - ansible-playbook
+              - --inventory
+              - "{{ lookup('ansible.builtin.env', 'MOLECULE_INVENTORY_FILE') }}"
+              - --limit
+              - "{{ inventory_hostname }}"
+              - --tags
+              - secure
+              - "{{ playbook_dir }}/tagged-secure.yml"
+          delegate_to: localhost
+          changed_when: true
+          no_log: true
 
         - name: Authenticate with the rotated credential without a client file
           community.mysql.mysql_query:
             login_user: root
-            login_password: MoleculeRotated123!
+            login_password: "{{ mariadb_tagged_root_password }}"
             login_unix_socket: /run/mysqld/mysqld.sock
             config_file: ''
             query: "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = 'molecule_lts'"
@@ -91,12 +99,46 @@
           ansible.builtin.assert:
             that: mariadb_rotated_database.query_result[0] | length == 1
 
-        - name: Restore the disposable root credential
-          ansible.builtin.include_role:
-            name: "{{ playbook_dir }}/../.."
-            tasks_from: secure.yml
-          vars:
-            mariadb_root_password: MoleculeRoot123!
+        - name: Restore the disposable root credential through the real secure tag
+          ansible.builtin.command:
+            argv:
+              - ansible-playbook
+              - --inventory
+              - "{{ lookup('ansible.builtin.env', 'MOLECULE_INVENTORY_FILE') }}"
+              - --limit
+              - "{{ inventory_hostname }}"
+              - --tags
+              - secure
+              - --extra-vars
+              - "{{ {'mariadb_tagged_root_password': mariadb_root_password} | to_json }}"
+              - "{{ playbook_dir }}/tagged-secure.yml"
+          delegate_to: localhost
+          changed_when: true
+          no_log: true
+
+        - name: Create a new account with security setup disabled and only the users tag
+          ansible.builtin.command:
+            argv:
+              - ansible-playbook
+              - --inventory
+              - "{{ lookup('ansible.builtin.env', 'MOLECULE_INVENTORY_FILE') }}"
+              - --limit
+              - "{{ inventory_hostname }}"
+              - --tags
+              - users
+              - "{{ playbook_dir }}/tagged-users.yml"
+          delegate_to: localhost
+          changed_when: true
+          no_log: true
+
+        - name: Require the tagged account to authenticate with its validated password
+          community.mysql.mysql_query:
+            login_user: molecule_tagged
+            login_password: "{{ mariadb_tagged_test_password }}"
+            login_unix_socket: /run/mysqld/mysqld.sock
+            config_file: ''
+            query: SELECT 1
+          no_log: true
 
         - name: Exercise the implicit data migration guard
           block:

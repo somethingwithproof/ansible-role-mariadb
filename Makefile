@@ -41,9 +41,11 @@ molecule-test-all: ## Run all Molecule scenarios
 
 docker-test: ## Run basic Docker test with MariaDB
 	docker build -t mariadb-ansible-test -f dev/Dockerfile .
-	docker compose -f dev/docker-compose.yml up -d
-	docker compose -f dev/docker-compose.yml exec -T mariadb mysql -u root -proot -e "SHOW DATABASES;"
-	docker compose -f dev/docker-compose.yml exec -T mariadb mysql -u root -proot -e "SELECT VERSION();"
+	docker compose -f dev/docker-compose.yml up --wait mariadb
+	docker compose -f dev/docker-compose.yml exec -T mariadb sh -ec \
+	  'MYSQL_PWD="$$MARIADB_ROOT_PASSWORD" exec mariadb -uroot -e "SHOW DATABASES;"'
+	docker compose -f dev/docker-compose.yml exec -T mariadb sh -ec \
+	  'MYSQL_PWD="$$MARIADB_ROOT_PASSWORD" exec mariadb -uroot -e "SELECT VERSION();"'
 	docker compose -f dev/docker-compose.yml down
 
 docker-replication-test: ## Run Docker-based replication scenario

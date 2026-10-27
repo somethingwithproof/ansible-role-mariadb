@@ -55,12 +55,16 @@ The current controller is Ansible 14.5.0 / ansible-core 2.21.5 with Python
 22.04, 24.04 and 26.04, Debian 12 and 13, and Rocky Linux 9 and 10. EL aliases
 in metadata do not establish separate RHEL or AlmaLinux certification.
 
-Ubuntu 26.04, Debian 13 and EL10 default to native packages. Set
-`mariadb_configure_repo: false` to use native packages on older maintained
-releases too. Existing older-release repository selection stays compatible;
-review and explicitly select a vendor-supported repository release before
-opting into the external repository path. The legacy `mariadb_version` value
-selects that external repository, not the native server version.
+Native distribution packages are the default on every tested platform.
+Existing external repository files are not removed, and the role does not
+migrate an installed server between package sources or major versions. Review
+package-manager conflicts before migrating an existing external installation.
+
+The external repository path is an explicit, untested opt-in through
+`mariadb_configure_repo: true`. Its legacy `mariadb_version` selector is not a
+native-server version or a recommendation for a supported upstream release.
+The old hard-coded mirrors do not cover every current distribution; use the
+native default or independently qualify the repository configuration first.
 
 The role discovers the running server's version and data directory before
 writing configuration. This preserves Ubuntu 26.04's `/var/lib/mariadb` and

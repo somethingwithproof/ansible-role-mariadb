@@ -43,7 +43,10 @@
   no_log: true
 
 - name: Set the localhost root password before updating other accounts
-  ansible.builtin.include_tasks: account_password.yml
+  ansible.builtin.include_tasks:
+    file: account_password.yml
+    apply:
+      tags: [mariadb, secure]
   vars:
     mariadb_account_name: root
     mariadb_account_host: localhost
@@ -62,7 +65,10 @@
 
 # Persist the new password before the remaining account operations use it.
 - name: Set root passwords for other local account identities
-  ansible.builtin.include_tasks: account_password.yml
+  ansible.builtin.include_tasks:
+    file: account_password.yml
+    apply:
+      tags: [mariadb, secure]
   vars:
     mariadb_account_name: root
     mariadb_account_host: "{{ item }}"

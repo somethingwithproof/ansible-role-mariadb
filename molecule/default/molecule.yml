@@ -25,7 +25,6 @@ provisioner:
       instance:
         ansible_become: false
         mariadb_allow_remote_connections: true
-        mariadb_configure_repo: false
         mariadb_root_password: "MoleculeTest123!"
         mariadb_bind_address: "0.0.0.0"
         mariadb_version: "${MOLECULE_MARIADB_VERSION:-10.6}"

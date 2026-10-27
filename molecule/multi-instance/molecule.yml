@@ -47,7 +47,6 @@ provisioner:
       all:
         ansible_become: false
         mariadb_allow_remote_connections: true
-        mariadb_configure_repo: false
         mariadb_root_password: "MoleculeTest123!"
         mariadb_databases:
           - name: replication_test_db

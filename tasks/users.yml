@@ -2,7 +2,10 @@
 # Tasks for configuring MySQL users
 
 - name: Validate managed user passwords on the server
-  ansible.builtin.include_tasks: account_password.yml
+  ansible.builtin.include_tasks:
+    file: account_password.yml
+    apply:
+      tags: [mariadb, users]
   vars:
     mariadb_account_name: "{{ item.name }}"
     mariadb_account_host: "{{ item.host | default('localhost') }}"

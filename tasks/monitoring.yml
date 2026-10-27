@@ -2,7 +2,10 @@
 # Tasks for configuring MariaDB monitoring
 
 - name: Validate the monitoring account password on the server
-  ansible.builtin.include_tasks: account_password.yml
+  ansible.builtin.include_tasks:
+    file: account_password.yml
+    apply:
+      tags: [mariadb, monitoring]
   vars:
     mariadb_account_name: "{{ mariadb_monitoring_user }}"
     mariadb_account_host: "{{ mariadb_monitoring_host }}"

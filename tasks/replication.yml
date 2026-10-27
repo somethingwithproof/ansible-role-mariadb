@@ -26,7 +26,10 @@
         - { variable: 'expire_logs_days', value: '7' }
 
     - name: Validate the replication account password on the server
-      ansible.builtin.include_tasks: account_password.yml
+      ansible.builtin.include_tasks:
+        file: account_password.yml
+        apply:
+          tags: [mariadb, replication, master]
       vars:
         mariadb_account_name: "{{ mariadb_replication_user }}"
         mariadb_account_host: "%"

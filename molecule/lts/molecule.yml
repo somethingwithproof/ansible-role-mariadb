@@ -65,7 +65,8 @@ provisioner:
       all:
         ansible_become: false
         ansible_python_interpreter: /usr/bin/python3
-        mariadb_configure_repo: false
+        mariadb_tagged_test_password: "TaggedUser'123!%"
+        mariadb_tagged_root_password: MoleculeRotated123!
         mariadb_root_password: MoleculeRoot123!
         mariadb_allow_remote_connections: true
         mariadb_bind_address: "0.0.0.0"

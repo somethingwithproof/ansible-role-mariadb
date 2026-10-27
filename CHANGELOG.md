@@ -10,9 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Current platform support
 - Test native packages on Ubuntu 22.04/24.04/26.04, Debian 12/13 and Rocky 9/10
   with Ansible 14.5.0, ansible-core 2.21.5 and Python 3.13.
+- Default to native packages on every tested platform. External repositories
+  require explicit qualification and are not migrated automatically.
 - Preserve the running data directory and reject implicit storage migrations.
 - Correct native package names, configuration paths and version-specific options.
-- Use MariaDB password validation and parameterized plaintext account updates.
+- Use MariaDB password validation and parameterized plaintext account updates,
+  including tag-limited security and account-management runs.
 - Keep administrator connections on the local Unix socket and use current
   MariaDB client command names for backup and monitoring.
 - Move runtime CI to a separately named hash-locked controller environment and

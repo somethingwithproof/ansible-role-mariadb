@@ -38,6 +38,7 @@
       ansible.builtin.stat:
         path: /root/.my.cnf
       register: mariadb_root_client_config
+      tags: [always]
 
     - name: Configure MariaDB users
       ansible.builtin.import_tasks: users.yml

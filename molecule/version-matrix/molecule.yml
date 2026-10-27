@@ -36,7 +36,6 @@ provisioner:
     group_vars:
       all:
         ansible_become: false
-        mariadb_configure_repo: false
         mariadb_root_password: MoleculeTest123!
         mariadb_bind_address: 0.0.0.0
         mariadb_allow_remote_connections: true

@@ -1,0 +1,8 @@
+---
+- name: Rotate disposable administrator credentials through the secure tag
+  hosts: all
+  gather_facts: true
+  vars:
+    mariadb_root_password: "{{ mariadb_tagged_root_password }}"
+  roles:
+    - role: "{{ playbook_dir }}/../.."

@@ -6,21 +6,16 @@ mariadb_service_state: started
 mariadb_service_enabled: true
 
 # Installation
+# Legacy external-repository selector; ignored by native package installation.
 mariadb_version: "10.6"
 mariadb_packages: "{{ mariadb_platform_packages }}"
 mariadb_prerequisite_packages: "{{ mariadb_platform_prerequisite_packages }}"
 mariadb_additional_packages: []
 
 # Repository
-# New OS releases use their maintained native server packages by default.
-# Older deployments retain the existing repository-selection behavior.
-mariadb_configure_repo: >-
-  {{ not ((ansible_facts.distribution == 'Ubuntu'
-           and ansible_facts.distribution_major_version | int >= 26)
-          or (ansible_facts.distribution == 'Debian'
-              and ansible_facts.distribution_major_version | int >= 13)
-          or (ansible_facts.os_family == 'RedHat'
-              and ansible_facts.distribution_major_version | int >= 10)) }}
+# Use the maintained distribution packages on every tested platform.
+# Existing external repositories are not removed or migrated automatically.
+mariadb_configure_repo: false
 mariadb_repo_version: "{{ mariadb_version }}"
 mariadb_repo_keyserver: "keyserver.ubuntu.com"
 mariadb_repo_key: "0xF1656F24C74CD1D8"
