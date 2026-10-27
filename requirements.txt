@@ -15,4 +15,4 @@ yamllint==1.38.0
 
 # Docker support
 docker==7.2.0
-docker-compose>=1.29.2,<2.0.0
+# Install Docker Compose v2 as a Docker CLI plugin, not a Python package.

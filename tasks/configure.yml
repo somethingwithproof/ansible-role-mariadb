@@ -1,10 +1,18 @@
 ---
 # Tasks for configuring MariaDB
 
+- name: Ensure the server configuration directory exists
+  ansible.builtin.file:
+    path: "{{ mariadb_config_file | dirname }}"
+    state: directory
+    owner: root
+    group: mysql
+    mode: '0750'
+
 - name: Generate MariaDB server configuration
   ansible.builtin.template:
     src: mariadb.cnf.j2
-    dest: "{{ mariadb_config_dir }}/mariadb.conf.d/99-ansible-managed.cnf"
+    dest: "{{ mariadb_config_file }}"
     owner: root
     group: mysql
     mode: '0640'
@@ -38,6 +46,9 @@
       when: >-
         mariadb_tls_enabled and
         (tls_cert_files.results | selectattr('stat.exists', 'equalto', false) | list | length > 0)
+
+- name: Apply server configuration before using database settings
+  ansible.builtin.meta: flush_handlers
 
 - name: Wait for MariaDB to start
   ansible.builtin.wait_for:

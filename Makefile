@@ -41,18 +41,20 @@ molecule-test-all: ## Run all Molecule scenarios
 
 docker-test: ## Run basic Docker test with MariaDB
 	docker build -t mariadb-ansible-test -f dev/Dockerfile .
-	docker-compose -f dev/docker-compose.yml up -d
-	docker-compose -f dev/docker-compose.yml exec -T mariadb mysql -u root -proot -e "SHOW DATABASES;"
-	docker-compose -f dev/docker-compose.yml exec -T mariadb mysql -u root -proot -e "SELECT VERSION();"
-	docker-compose -f dev/docker-compose.yml down
+	docker compose -f dev/docker-compose.yml up --wait mariadb
+	docker compose -f dev/docker-compose.yml exec -T mariadb sh -ec \
+	  'MYSQL_PWD="$$MARIADB_ROOT_PASSWORD" exec mariadb -uroot -e "SHOW DATABASES;"'
+	docker compose -f dev/docker-compose.yml exec -T mariadb sh -ec \
+	  'MYSQL_PWD="$$MARIADB_ROOT_PASSWORD" exec mariadb -uroot -e "SELECT VERSION();"'
+	docker compose -f dev/docker-compose.yml down
 
 docker-replication-test: ## Run Docker-based replication scenario
 	docker build -t mariadb-ansible-test -f dev/Dockerfile .
 	docker build -t mariadb-test -f tests/Dockerfile.test .
-	docker-compose -f dev/docker-compose.yml --profile test up -d mariadb-primary mariadb-replica
+	docker compose -f dev/docker-compose.yml --profile test up -d mariadb-primary mariadb-replica
 	sleep 30
-	docker-compose -f dev/docker-compose.yml --profile test run test-replication
-	docker-compose -f dev/docker-compose.yml --profile test down -v
+	docker compose -f dev/docker-compose.yml --profile test run test-replication
+	docker compose -f dev/docker-compose.yml --profile test down -v
 
 docker-test-all: docker-test docker-replication-test ## Run all Docker-based tests
 
@@ -64,7 +66,7 @@ docs: ## Generate Ansible docs
 
 clean: ## Clean up temp files and containers
 	rm -rf .molecule .cache __pycache__
-	-docker-compose -f dev/docker-compose.yml down -v
-	-docker-compose -f dev/docker-compose.yml --profile test down -v
+	-docker compose -f dev/docker-compose.yml down -v
+	-docker compose -f dev/docker-compose.yml --profile test down -v
 
 all: lint molecule-test-all ## Run linting and all Molecule tests

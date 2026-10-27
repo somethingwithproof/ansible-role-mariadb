@@ -62,21 +62,23 @@ If you have any questions, feel free to open an issue or contact the maintainers
 
 ## CI dependency locks and offline security checks
 
-CI installs binary distributions from SHA-256-verified dependency locks in
-`requirements/`. Its Ansible 9 and 10 compatibility jobs use the published
-9.0.1 and 10.0.1 releases; the formerly configured 9.0.0 and 10.0.0 do not
-exist on PyPI. These jobs do not establish support for newer Ansible versions.
-The lint hooks use Python 3.12 and their independently declared tool versions.
+CI installs SHA-256-verified dependency locks from `requirements/`. Current
+runtime jobs use `ci-ansible-14.5.0` on Python 3.13, including the seven-OS
+`lts` scenario and the default, multi-instance, backup, monitoring and native
+version-matrix contracts. Historical Ansible 9/10/12 locks retain their
+original identities; they do not define current controller support.
 
-Regenerate locks with the tested `uv` 0.10.6 tool, selecting Python through
-`mise` and retaining the Ubuntu 22.04-compatible Linux target:
+Regenerate the new runtime lock with Python selected through `mise`:
 
 ```sh
-mise exec python@3.12 -- uv pip compile requirements/ci-lint.in --python-version 3.12 --python-platform x86_64-manylinux_2_35 --only-binary :all: --generate-hashes --output-file requirements/ci-lint.txt
-mise exec python@3.10 -- uv pip compile requirements/ci-ansible-9.0.1.in --python-version 3.10 --python-platform x86_64-manylinux_2_35 --only-binary :all: --generate-hashes --output-file requirements/ci-ansible-9.0.1.txt
-mise exec python@3.10 -- uv pip compile requirements/ci-ansible-10.0.1.in --python-version 3.10 --python-platform x86_64-manylinux_2_35 --only-binary :all: --generate-hashes --output-file requirements/ci-ansible-10.0.1.txt
-mise exec python@3.12 -- python -m unittest discover -s tests/unit -v
+mise exec python@3.13 -- uv pip compile requirements/ci-ansible-14.5.0.in --python-version 3.13 --python-platform x86_64-manylinux_2_35 --only-binary :all: --generate-hashes --output-file requirements/ci-ansible-14.5.0.txt
+mise exec python@3.12 -- pre-commit run --all-files
+mise exec python@3.13 -- python -m unittest discover -s tests/unit -v
+mise exec python@3.13 -- molecule test -s lts
 ```
+
+Install Docker Compose v2 as a Docker CLI plugin. The obsolete Python Compose
+v1 package conflicts with the current PyYAML dependency and is not installed.
 
 The offline tests substitute database and GitHub clients. They check failure
 handling, exact-commit merge requests, and credential-file permissions without
@@ -94,15 +96,7 @@ Dependabot merging runs after the named CI workflow completes, on its periodic
 schedule, or on manual dispatch. It executes only trusted default-branch
 metadata processing: it does not check out PR code or consume CI artifacts.
 The GitHub API filters PR authors and supplies the exact commit passed to merge.
-Both compatibility locks use the project-declared Docker SDK 7.2.0 so the
-current Requests transport can connect to the runner's Docker daemon. The backup
-directory is managed only by backup tasks, preventing ownership oscillation.
-
-Ansible 12.2 has a separate `ci-ansible-12.2.0` compatibility environment using
-Python 3.11. The existing Ansible 9/10 environments keep Python 3.10 and their
-original locks. Dependabot major Ansible changes must be reviewed as a new
-environment, rather than replacing the package inside a differently named
-compatibility lock. The Ansible 12 environment runs the same default and
-multi-instance/distro matrix; additional scenarios retain their existing
-Ansible 10 environment. This declares test coverage, not untested production
-support.
+The current runtime lock includes Docker SDK 7.2.0. The backup directory is
+managed only by backup tasks, preventing ownership oscillation. Review a new
+Ansible major in a separately named environment with its required Python;
+do not replace packages inside a differently named compatibility lock.

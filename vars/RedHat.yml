@@ -1,14 +1,16 @@
 ---
 # MariaDB variables specific to RedHat-based systems
 
-mariadb_service_name: mariadb
-mariadb_packages:
-  - MariaDB-server
-  - MariaDB-client
-  - python3-PyMySQL
+mariadb_platform_service_name: mariadb
+mariadb_platform_packages: >-
+  {{ (['MariaDB-server', 'MariaDB-client'] if mariadb_configure_repo | bool
+      else ['mariadb-server', 'mariadb']) + ['python3-PyMySQL'] }}
 
-mariadb_prerequisite_packages:
+mariadb_platform_prerequisite_packages:
   - epel-release
   - policycoreutils-python-utils
-  - curl
   - gnupg2
+
+mariadb_platform_config_dir: /etc/my.cnf.d
+mariadb_platform_config_file: /etc/my.cnf.d/99-ansible-managed.cnf
+mariadb_platform_socket: /var/lib/mysql/mysql.sock

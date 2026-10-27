@@ -1,10 +1,20 @@
 ---
 # Tasks for configuring MariaDB monitoring
 
+- name: Validate the monitoring account password on the server
+  ansible.builtin.include_tasks:
+    file: account_password.yml
+    apply:
+      tags: [mariadb, monitoring]
+  vars:
+    mariadb_account_name: "{{ mariadb_monitoring_user }}"
+    mariadb_account_host: "{{ mariadb_monitoring_host }}"
+    mariadb_account_password: "{{ mariadb_monitoring_password }}"
+  no_log: true
+
 - name: Create monitoring user
   community.mysql.mysql_user:
     name: "{{ mariadb_monitoring_user }}"
-    password: "{{ mariadb_monitoring_password }}"
     host: "{{ mariadb_monitoring_host }}"
     priv: "*.*:PROCESS,REPLICATION CLIENT,SELECT"
     state: present
@@ -17,26 +27,29 @@
 - name: Install Prometheus MySQL exporter
   when: mariadb_exporter_enabled | bool
   tags: [mariadb, monitoring, prometheus]
+  vars:
+    mariadb_exporter_arch: "{{ {'x86_64': 'amd64', 'aarch64': 'arm64'}[ansible_facts.architecture] }}"
   block:
     - name: Download MySQL exporter
       ansible.builtin.get_url:
         url: >-
-          https://github.com/prometheus/mysqld_exporter/releases/download/v{{ mariadb_exporter_version }}/
-          mysqld_exporter-{{ mariadb_exporter_version }}.linux-amd64.tar.gz
-        dest: "/tmp/mysqld_exporter-{{ mariadb_exporter_version }}.linux-amd64.tar.gz"
+          https://github.com/prometheus/mysqld_exporter/releases/download/v{{
+          mariadb_exporter_version }}/mysqld_exporter-{{
+          mariadb_exporter_version }}.linux-{{ mariadb_exporter_arch }}.tar.gz
+        dest: "/tmp/mysqld_exporter-{{ mariadb_exporter_version }}.linux-{{ mariadb_exporter_arch }}.tar.gz"
         mode: '0644'
       register: mysqld_exporter_download
 
     - name: Extract MySQL exporter
       ansible.builtin.unarchive:
-        src: "/tmp/mysqld_exporter-{{ mariadb_exporter_version }}.linux-amd64.tar.gz"
+        src: "/tmp/mysqld_exporter-{{ mariadb_exporter_version }}.linux-{{ mariadb_exporter_arch }}.tar.gz"
         dest: "/tmp"
         remote_src: true
       when: mysqld_exporter_download.changed
 
     - name: Move MySQL exporter binary to /usr/local/bin
       ansible.builtin.copy:
-        src: "/tmp/mysqld_exporter-{{ mariadb_exporter_version }}.linux-amd64/mysqld_exporter"
+        src: "/tmp/mysqld_exporter-{{ mariadb_exporter_version }}.linux-{{ mariadb_exporter_arch }}/mysqld_exporter"
         dest: "/usr/local/bin/mysqld_exporter"
         mode: '0755'
         remote_src: true
@@ -84,12 +97,6 @@
         state: started
         enabled: true
         daemon_reload: true
-  rescue:
-    - name: Cleanup MySQL exporter download
-      ansible.builtin.file:
-        path: "/tmp/mysqld_exporter-{{ mariadb_exporter_version }}.linux-amd64.tar.gz"
-        state: absent
-
 - name: Install MariaDB status check script
   ansible.builtin.template:
     src: mariadb_monitoring.sh.j2

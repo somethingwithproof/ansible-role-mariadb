@@ -8,8 +8,7 @@ max_binlog_size = 100M
 sync_binlog = 1
 
 # Enable GTIDs
-gtid_mode = ON
-enforce_gtid_consistency = ON
+gtid_strict_mode = ON
 
 # InnoDB settings
 innodb_buffer_pool_size = 128M

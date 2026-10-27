@@ -1,20 +1,56 @@
 ---
 # Tasks for securing MariaDB installation
 
-- name: Set root password
-  community.mysql.mysql_user:
-    name: root
-    host: "{{ item }}"
-    password: "{{ mariadb_root_password }}"
+- name: Inspect the existing root client configuration
+  ansible.builtin.stat:
+    path: /root/.my.cnf
+  register: mariadb_root_client_config
+
+- name: Check the MariaDB password validation plugin
+  community.mysql.mysql_query:
+    login_user: root
+    login_password: "{{ omit if mariadb_root_client_config.stat.exists else mariadb_root_password }}"
     login_unix_socket: "{{ mariadb_socket }}"
-    state: present
-  loop:
-    - localhost
-    - 127.0.0.1
-    - ::1
-    - "{{ ansible_hostname }}"
-  register: root_password
+    query: >-
+      SELECT COUNT(*) AS present FROM information_schema.PLUGINS
+      WHERE PLUGIN_NAME = 'simple_password_check' AND PLUGIN_STATUS = 'ACTIVE'
+  register: mariadb_password_plugin
+  changed_when: false
   no_log: true
+
+- name: Install MariaDB password validation when absent
+  community.mysql.mysql_query:
+    login_user: root
+    login_password: "{{ omit if mariadb_root_client_config.stat.exists else mariadb_root_password }}"
+    login_unix_socket: "{{ mariadb_socket }}"
+    query: "INSTALL SONAME 'simple_password_check';"
+  when: mariadb_password_plugin.query_result[0][0].present | int == 0
+  no_log: true
+
+- name: Enforce mixed-case password validation with digits and punctuation
+  community.mysql.mysql_variables:
+    login_user: root
+    login_password: "{{ omit if mariadb_root_client_config.stat.exists else mariadb_root_password }}"
+    login_unix_socket: "{{ mariadb_socket }}"
+    variable: "{{ item.name }}"
+    value: "{{ item.value }}"
+    mode: global
+  loop:
+    - {name: simple_password_check_minimal_length, value: '8'}
+    - {name: simple_password_check_digits, value: '1'}
+    - {name: simple_password_check_letters_same_case, value: '1'}
+    - {name: simple_password_check_other_characters, value: '1'}
+  no_log: true
+
+- name: Set the localhost root password before updating other accounts
+  ansible.builtin.include_tasks:
+    file: account_password.yml
+    apply:
+      tags: [mariadb, secure]
+  vars:
+    mariadb_account_name: root
+    mariadb_account_host: localhost
+    mariadb_account_password: "{{ mariadb_root_password }}"
   when: mariadb_root_password != ""
 
 - name: Create .my.cnf file for root
@@ -26,6 +62,24 @@
     mode: '0600'
   no_log: true
   when: mariadb_root_password != ""
+
+# Persist the new password before the remaining account operations use it.
+- name: Set root passwords for other local account identities
+  ansible.builtin.include_tasks:
+    file: account_password.yml
+    apply:
+      tags: [mariadb, secure]
+  vars:
+    mariadb_account_name: root
+    mariadb_account_host: "{{ item }}"
+    mariadb_account_password: "{{ mariadb_root_password }}"
+  loop:
+    - 127.0.0.1
+    - ::1
+    - "{{ ansible_hostname }}"
+  when:
+    - mariadb_root_password != ""
+    - item != ansible_hostname or not (mariadb_disallow_root_login_remotely | bool)
 
 - name: Remove anonymous users
   community.mysql.mysql_user:
@@ -58,25 +112,3 @@
     - "%"
   when: mariadb_disallow_root_login_remotely | bool
   no_log: true
-
-- name: Configure password validation plugin
-  community.mysql.mysql_query:
-    login_user: root
-    login_password: "{{ mariadb_root_password }}"
-    query: "INSTALL PLUGIN validate_password SONAME 'validate_password.so';"
-  no_log: true
-  register: validate_plugin
-  failed_when: >
-    validate_plugin.failed and
-    'already exists' not in validate_plugin.msg|default('')
-
-- name: Set password validation policy
-  community.mysql.mysql_query:
-    login_user: root
-    login_password: "{{ mariadb_root_password }}"
-    query: "SET GLOBAL validate_password_policy = 'STRONG';"
-  no_log: true
-  register: set_policy
-  failed_when: >
-    set_policy.failed and
-    'Unknown system variable' not in set_policy.msg|default('')

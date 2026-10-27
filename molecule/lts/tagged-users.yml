@@ -1,0 +1,12 @@
+---
+- name: Manage a disposable account through the public tagged entry point
+  hosts: all
+  gather_facts: true
+  vars:
+    mariadb_secure_installation: false
+    mariadb_users:
+      - name: molecule_tagged
+        password: "{{ mariadb_tagged_test_password }}"
+        priv: '*.*:USAGE'
+  roles:
+    - role: "{{ playbook_dir }}/../.."

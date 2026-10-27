@@ -3,14 +3,14 @@
   hosts: all
   become: true
   vars:
-    mariadb_root_password: "molecule_test_password"
+    mariadb_root_password: "MoleculeTest123!"
     mariadb_databases:
       - name: molecule_test_db
         encoding: utf8mb4
         collation: utf8mb4_unicode_ci
     mariadb_users:
       - name: molecule_test_user
-        password: molecule_test_password
+        password: MoleculeTest123!
         priv: "molecule_test_db.*:ALL"
   roles:
-    - role: thomasvincent.mariadb
+    - role: "{{ playbook_dir }}/../.."

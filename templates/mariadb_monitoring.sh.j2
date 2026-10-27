@@ -9,8 +9,7 @@ set -e
 # Configuration
 MYSQL_USER="{{ mariadb_monitoring_user }}"
 MYSQL_PASSWORD="{{ mariadb_monitoring_password }}"
-HOST="{{ mariadb_bind_address }}"
-PORT="{{ mariadb_port }}"
+SOCKET="{{ mariadb_socket }}"
 LOG_FILE="/var/log/mariadb_monitoring.log"
 ALERT_EMAIL="{{ mariadb_alert_email | default('root@localhost') }}"
 MAX_CONNECTIONS_THRESHOLD=80
@@ -35,14 +34,14 @@ if ! pgrep -f mysqld > /dev/null; then
 fi
 
 # Check if we can connect
-if ! mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h"$HOST" -P"$PORT" -e "SELECT 1" > /dev/null 2>&1; then
+if ! mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --protocol=SOCKET --socket="$SOCKET" -e "SELECT 1" > /dev/null 2>&1; then
   send_alert "Connection Failed" "Cannot connect to MariaDB server"
   exit 1
 fi
 
 # Check connection usage
-CURRENT_CONNECTIONS=$(mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h"$HOST" -P"$PORT" -e "SHOW GLOBAL STATUS LIKE 'Threads_connected';" | awk 'NR==2 {print $2}')
-MAX_CONNECTIONS=$(mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h"$HOST" -P"$PORT" -e "SHOW VARIABLES LIKE 'max_connections';" | awk 'NR==2 {print $2}')
+CURRENT_CONNECTIONS=$(mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --protocol=SOCKET --socket="$SOCKET" -e "SHOW GLOBAL STATUS LIKE 'Threads_connected';" | awk 'NR==2 {print $2}')
+MAX_CONNECTIONS=$(mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --protocol=SOCKET --socket="$SOCKET" -e "SHOW VARIABLES LIKE 'max_connections';" | awk 'NR==2 {print $2}')
 CONNECTION_PERCENT=$((CURRENT_CONNECTIONS * 100 / MAX_CONNECTIONS))
 
 if [ "$CONNECTION_PERCENT" -ge "$MAX_CONNECTIONS_THRESHOLD" ]; then
@@ -50,14 +49,14 @@ if [ "$CONNECTION_PERCENT" -ge "$MAX_CONNECTIONS_THRESHOLD" ]; then
 fi
 
 # Check for long-running queries
-LONG_QUERIES=$(mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h"$HOST" -P"$PORT" -e "SELECT ID, USER, HOST, DB, COMMAND, TIME, STATE, INFO FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND != 'Sleep' AND TIME > 60 ORDER BY TIME DESC;" 2>/dev/null)
+LONG_QUERIES=$(mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --protocol=SOCKET --socket="$SOCKET" -e "SELECT ID, USER, HOST, DB, COMMAND, TIME, STATE, INFO FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND != 'Sleep' AND TIME > 60 ORDER BY TIME DESC;" 2>/dev/null)
 if [ -n "$LONG_QUERIES" ]; then
   send_alert "Long-Running Queries" "The following queries have been running for more than 60 seconds:\n\n$LONG_QUERIES"
 fi
 
 # Check for slave replication status
 {% if mariadb_replication_enabled | bool and mariadb_replication_role == 'slave' %}
-SLAVE_STATUS=$(mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h"$HOST" -P"$PORT" -e "SHOW SLAVE STATUS\G" 2>/dev/null)
+SLAVE_STATUS=$(mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --protocol=SOCKET --socket="$SOCKET" -e "SHOW SLAVE STATUS\G" 2>/dev/null)
 SLAVE_IO_RUNNING=$(echo "$SLAVE_STATUS" | grep "Slave_IO_Running:" | awk '{print $2}')
 SLAVE_SQL_RUNNING=$(echo "$SLAVE_STATUS" | grep "Slave_SQL_Running:" | awk '{print $2}')
 SECONDS_BEHIND_MASTER=$(echo "$SLAVE_STATUS" | grep "Seconds_Behind_Master:" | awk '{print $2}')
@@ -81,7 +80,7 @@ if [ "$DISK_PERCENT" -ge 85 ]; then
 fi
 
 # Check InnoDB status for any errors
-INNODB_STATUS=$(mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h"$HOST" -P"$PORT" -e "SHOW ENGINE INNODB STATUS\G" 2>/dev/null)
+INNODB_STATUS=$(mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --protocol=SOCKET --socket="$SOCKET" -e "SHOW ENGINE INNODB STATUS\G" 2>/dev/null)
 if echo "$INNODB_STATUS" | grep -i "error" | grep -v "NO ACTIVE ERROR" > /dev/null; then
   INNODB_ERRORS=$(echo "$INNODB_STATUS" | grep -i "error" | grep -v "NO ACTIVE ERROR")
   send_alert "InnoDB Errors" "$INNODB_ERRORS"

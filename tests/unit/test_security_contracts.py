@@ -33,10 +33,14 @@ from pathlib import Path
 args = sys.argv[1:]
 case = os.environ.get('MOCK_CASE', 'SUCCESS')
 if args[:2] == ['pr', 'list']:
-    print('17 ' + 'a' * 40)
+    print(json.dumps([{
+        'number': 17, 'isDraft': False, 'mergeable': 'MERGEABLE',
+        'title': 'build(deps): bump example from 1.2.3 to 1.2.4',
+        'body': '', 'headRefName': 'dependabot/pip/example-1.2.4',
+        'headRefOid': 'a' * 40, 'isCrossRepository': False,
+    }]))
 elif args[:2] == ['pr', 'checks']:
-    if case != 'empty':
-        print(case)
+    print(json.dumps([] if case == 'empty' else [{'state': case}]))
 elif args[:2] == ['pr', 'merge']:
     Path(os.environ['MOCK_MERGE_LOG']).write_text(json.dumps(args))
 else:

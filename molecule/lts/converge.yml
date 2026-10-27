@@ -1,0 +1,6 @@
+---
+- name: Converge current LTS database installation
+  hosts: all
+  become: true
+  roles:
+    - role: "{{ playbook_dir }}/../.."

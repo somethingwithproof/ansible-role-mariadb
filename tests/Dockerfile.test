@@ -1,0 +1,7 @@
+FROM mariadb:13.0
+USER root
+# Keep the existing replication helper compatible with MariaDB client naming.
+RUN ln -s /usr/bin/mariadb /usr/local/bin/mysql
+COPY tests/helpers /tests/helpers
+ENTRYPOINT []
+USER mysql

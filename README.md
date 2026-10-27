@@ -31,6 +31,7 @@ ansible-galaxy collection install community.mysql
 - hosts: database_servers
   become: true
   vars:
+    mariadb_configure_repo: false
     mariadb_root_password: "{{ vault_mariadb_root_password }}"
     mariadb_databases:
       - name: app_db
@@ -49,13 +50,38 @@ Provide the referenced password variables through Ansible Vault or your secret-m
 
 ## Requirements and compatibility
 
-[Role metadata](meta/main.yml) declares Ansible 9.0.0 as its minimum and lists Ubuntu, Debian, and EL platform targets. [Requirements](requirements.txt), [development requirements](requirements-dev.txt), and [CI](.github/workflows/ci.yml) define the tool versions and configured test matrix. Declared targets and test scenarios do not establish a passing compatibility matrix for every OS or MariaDB release.
+The current controller is Ansible 14.5.0 / ansible-core 2.21.5 with Python
+3.13. The `lts` scenario exercises native distribution packages on Ubuntu
+22.04, 24.04 and 26.04, Debian 12 and 13, and Rocky Linux 9 and 10. EL aliases
+in metadata do not establish separate RHEL or AlmaLinux certification.
+
+Native distribution packages are the default on every tested platform.
+Existing external repository files are not removed, and the role does not
+migrate an installed server between package sources or major versions. Review
+package-manager conflicts before migrating an existing external installation.
+
+The external repository path is an explicit, untested opt-in through
+`mariadb_configure_repo: true`. Its legacy `mariadb_version` selector is not a
+native-server version or a recommendation for a supported upstream release.
+The old hard-coded mirrors do not cover every current distribution; use the
+native default or independently qualify the repository configuration first.
+
+The role discovers the running server's version and data directory before
+writing configuration. This preserves Ubuntu 26.04's `/var/lib/mariadb` and
+existing database storage. An explicit conflicting `mariadb_data_dir` fails
+with a migration requirement; the role does not move data. Public package,
+service, socket and configuration-file overrides remain available.
+
+Password changes use parameterized statements so MariaDB can enforce its
+strict password-validation plugin. Root's private client file uses the local
+Unix socket. Unchanged accounts retain their grants and passwords.
 
 ## Development and testing
 
 ```bash
 make lint
 make molecule-test
+mise exec python@3.13 -- molecule test -s lts
 make backup-test
 make monitoring-test
 make version-matrix-test

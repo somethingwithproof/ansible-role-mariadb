@@ -7,8 +7,7 @@ relay_log = mysql-relay
 relay_log_purge = ON
 
 # Enable GTIDs
-gtid_mode = ON
-enforce_gtid_consistency = ON
+gtid_strict_mode = ON
 
 # InnoDB settings
 innodb_buffer_pool_size = 128M

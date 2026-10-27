@@ -5,8 +5,8 @@ driver:
   name: docker
 platforms:
   - name: primary
-    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible:latest"
-    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2404}-ansible:latest"
+    command: ${MOLECULE_DOCKER_COMMAND:-/sbin/init}
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     cgroupns_mode: host
@@ -20,8 +20,8 @@ platforms:
       - primary
 
   - name: replica
-    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible:latest"
-    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2404}-ansible:latest"
+    command: ${MOLECULE_DOCKER_COMMAND:-/sbin/init}
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     cgroupns_mode: host
@@ -45,18 +45,20 @@ provisioner:
   inventory:
     group_vars:
       all:
-        mariadb_root_password: "molecule_test_password"
+        ansible_become: false
+        mariadb_allow_remote_connections: true
+        mariadb_root_password: "MoleculeTest123!"
         mariadb_databases:
           - name: replication_test_db
             encoding: utf8mb4
             collation: utf8mb4_unicode_ci
         mariadb_users:
           - name: replication_test_user
-            password: replication_test_password
+            password: ReplicationTest123!
             priv: "replication_test_db.*:ALL"
         mariadb_replication_enabled: true
         mariadb_replication_user: replicator
-        mariadb_replication_password: replication_password
+        mariadb_replication_password: ReplicationPass123!
       primary:
         mariadb_bind_address: "0.0.0.0"
         mariadb_version: "${MOLECULE_MARIADB_VERSION:-10.6}"

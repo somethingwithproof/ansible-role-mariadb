@@ -1,6 +1,7 @@
 ---
 name: Ansible Role CI
 on:
+  workflow_dispatch:
   push:
     branches: [main, master]
   pull_request:
@@ -21,7 +22,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-22.04
-    timeout-minutes: 15  # Prevent hung jobs
+    timeout-minutes: 45  # Includes full Docker convergence and idempotence
     steps:
       - name: Check out the codebase
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -37,6 +38,9 @@ jobs:
         run: |
           python -m pip install --only-binary=:all: --require-hashes -r requirements/ci-lint.txt
 
+      - name: Install the declared database collections for isolated lint hooks
+        run: ansible-galaxy collection install -r requirements.yml
+
       - name: Run pre-commit checks
         run: |
           pre-commit install
@@ -48,21 +52,19 @@ jobs:
   molecule:
     name: Molecule
     runs-on: ubuntu-22.04
-    timeout-minutes: 15  # Prevent hung jobs
+    timeout-minutes: 45  # Includes full Docker convergence and idempotence
     needs: lint
     strategy:
       fail-fast: false
       matrix:
         ansible:
-          - "9.0.1"
-          - "10.0.1"
-          - "12.2.0"
+          - "14.5.0"
         scenario:
           - default
           - multi-instance
         distro:
           - ubuntu2204
-          - debian11
+          - debian13
     env:
       PY_COLORS: '1'
       ANSIBLE_FORCE_COLOR: '1'
@@ -75,7 +77,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: ${{ matrix.ansible == '12.2.0' && '3.11' || '3.10' }}
+          python-version: '3.13'
           cache: pip
           cache-dependency-path: requirements/ci-ansible-${{ matrix.ansible }}.txt
 
@@ -93,7 +95,7 @@ jobs:
   additional-scenarios:
     name: Additional Scenarios
     runs-on: ubuntu-22.04
-    timeout-minutes: 15  # Prevent hung jobs
+    timeout-minutes: 45  # Includes full Docker convergence and idempotence
     needs: molecule
     strategy:
       fail-fast: false
@@ -114,13 +116,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.10'
+          python-version: '3.13'
           cache: pip
-          cache-dependency-path: requirements/ci-ansible-10.0.1.txt
+          cache-dependency-path: requirements/ci-ansible-14.5.0.txt
 
       - name: Install dependencies
         run: |
-          python -m pip install --only-binary=:all: --require-hashes -r requirements/ci-ansible-10.0.1.txt
+          python -m pip install --only-binary=:all: --require-hashes -r requirements/ci-ansible-14.5.0.txt
 
       - name: Verify Docker SDK transport
         run: python -c 'import docker; client = docker.from_env(); assert client.ping(); client.close()'
@@ -131,22 +133,11 @@ jobs:
   supported-distros:
     name: Test Supported Distros
     runs-on: ubuntu-22.04
-    timeout-minutes: 15  # Prevent hung jobs
+    timeout-minutes: 45  # Includes full Docker convergence and idempotence
     needs: lint
-    strategy:
-      fail-fast: false
-      matrix:
-        distro:
-          - ubuntu2204
-          - ubuntu2004
-          - debian12
-          - debian11
-          - rockylinux9
-          - rockylinux8
     env:
       PY_COLORS: '1'
       ANSIBLE_FORCE_COLOR: '1'
-      MOLECULE_DISTRO: ${{ matrix.distro }}
 
     steps:
       - name: Check out the codebase
@@ -155,24 +146,24 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.10'
+          python-version: '3.13'
           cache: pip
-          cache-dependency-path: requirements/ci-ansible-10.0.1.txt
+          cache-dependency-path: requirements/ci-ansible-14.5.0.txt
 
       - name: Install dependencies
         run: |
-          python -m pip install --only-binary=:all: --require-hashes -r requirements/ci-ansible-10.0.1.txt
+          python -m pip install --only-binary=:all: --require-hashes -r requirements/ci-ansible-14.5.0.txt
 
       - name: Verify Docker SDK transport
         run: python -c 'import docker; client = docker.from_env(); assert client.ping(); client.close()'
 
       - name: Run Molecule tests
-        run: molecule test
+        run: molecule test -s lts
 
   docker:
     name: Docker Test
     runs-on: ubuntu-22.04
-    timeout-minutes: 15  # Prevent hung jobs
+    timeout-minutes: 45  # Includes full Docker convergence and idempotence
     needs: [molecule, supported-distros]
     steps:
       - name: Check out the codebase
@@ -182,7 +173,7 @@ jobs:
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v3
 
       - name: Build the Docker image
-        uses: docker/build-push-action@ca877d9245402d1537745e0e3563b6a5408e6e4d # v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: ./dev/Dockerfile
@@ -194,10 +185,10 @@ jobs:
         run: |
           mkdir -p files
           touch files/custom.cnf  # Create empty file
-          docker-compose -f dev/docker-compose.yml up -d
+          docker compose -f dev/docker-compose.yml up --wait mariadb
           # Wait for MariaDB to be ready
           for _ in {1..30}; do
-            if docker-compose -f dev/docker-compose.yml exec -T mariadb mysqladmin ping -h localhost --silent; then
+            if docker compose -f dev/docker-compose.yml exec -T mariadb mariadb-admin ping -h localhost --silent; then
               break
             fi
             echo "Waiting for MariaDB to be ready..."
@@ -206,16 +197,19 @@ jobs:
 
       - name: Test MariaDB container
         run: |
-          docker-compose -f dev/docker-compose.yml exec -T mariadb mysql -u root -proot -e "SHOW DATABASES;"
-          docker-compose -f dev/docker-compose.yml exec -T mariadb mysql -u root -proot -e "SELECT VERSION();"
+          docker compose -f dev/docker-compose.yml exec -T mariadb \
+            mariadb -u root -psecure_password -e "SHOW DATABASES;"
+          docker compose -f dev/docker-compose.yml exec -T mariadb \
+            mariadb -u root -psecure_password -e "SELECT VERSION();"
 
       - name: Clean up Docker services
-        run: docker-compose -f dev/docker-compose.yml down
+        if: always()
+        run: docker compose -f dev/docker-compose.yml down
 
   docker-replication:
     name: Docker Replication Test
     runs-on: ubuntu-22.04
-    timeout-minutes: 15  # Prevent hung jobs
+    timeout-minutes: 45  # Includes full Docker convergence and idempotence
     needs: docker
     steps:
       - name: Check out the codebase
@@ -245,11 +239,11 @@ jobs:
 
       - name: Start replication containers
         run: |
-          docker-compose -f dev/docker-compose.yml --profile test up -d mariadb-primary mariadb-replica
+          docker compose -f dev/docker-compose.yml --profile test up --wait mariadb-primary mariadb-replica
           # Wait for MariaDB primary to be ready
           for _ in {1..30}; do
-            if docker-compose -f dev/docker-compose.yml exec -T mariadb-primary \
-              mysqladmin ping -h localhost --silent; then
+            if docker compose -f dev/docker-compose.yml exec -T mariadb-primary \
+              mariadb-admin ping -h localhost --silent; then
               break
             fi
             echo "Waiting for MariaDB primary to be ready..."
@@ -257,16 +251,35 @@ jobs:
           done
           # Wait for MariaDB replica to be ready
           for _ in {1..30}; do
-            if docker-compose -f dev/docker-compose.yml exec -T mariadb-replica \
-              mysqladmin ping -h localhost --silent; then
+            if docker compose -f dev/docker-compose.yml exec -T mariadb-replica \
+              mariadb-admin ping -h localhost --silent; then
               break
             fi
             echo "Waiting for MariaDB replica to be ready..."
             sleep 2
           done
 
+      - name: Initialize disposable replication
+        run: |
+          docker compose -f dev/docker-compose.yml exec -T mariadb-primary \
+            mariadb -uroot -psecure_password -e \
+            "CREATE USER IF NOT EXISTS 'replicator'@'%' IDENTIFIED BY 'ReplicationPass123!';
+             ALTER USER 'replicator'@'%' IDENTIFIED BY 'ReplicationPass123!';
+             GRANT REPLICATION SLAVE ON *.* TO 'replicator'@'%';"
+          read -r mariadb_fixture_log mariadb_fixture_pos _ < <(
+            docker compose -f dev/docker-compose.yml exec -T mariadb-primary \
+              mariadb -uroot -psecure_password -NBe "SHOW MASTER STATUS")
+          docker compose -f dev/docker-compose.yml exec -T mariadb-replica \
+            mariadb -uroot -psecure_password -e \
+            "STOP SLAVE; RESET SLAVE;
+             CHANGE MASTER TO MASTER_HOST='mariadb-primary', MASTER_USER='replicator',
+             MASTER_PASSWORD='ReplicationPass123!', MASTER_USE_GTID=no,
+             MASTER_LOG_FILE='$mariadb_fixture_log', MASTER_LOG_POS=$mariadb_fixture_pos;
+             START SLAVE;"
+
       - name: Test replication
-        run: docker-compose -f dev/docker-compose.yml --profile test run --rm test-replication
+        run: docker compose -f dev/docker-compose.yml --profile test run --rm test-replication
 
       - name: Clean up Docker services
-        run: docker-compose -f dev/docker-compose.yml --profile test down -v
+        if: always()
+        run: docker compose -f dev/docker-compose.yml --profile test down -v

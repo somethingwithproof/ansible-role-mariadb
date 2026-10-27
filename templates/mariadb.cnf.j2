@@ -42,7 +42,7 @@ tmp_table_size                 = {{ mariadb_tmp_table_size }}
 max_heap_table_size            = {{ mariadb_tmp_table_size }}
 
 # Query cache
-{% if mariadb_version | float >= 10.6 %}
+{% if (mariadb_running_version | default(mariadb_version)) is version('10.6', '>=') %}
 # Query cache deprecated in MariaDB 10.6 and later
 query_cache_type               = OFF
 query_cache_size               = 0
@@ -55,7 +55,9 @@ query_cache_limit              = {{ mariadb_query_cache_limit }}
 # InnoDB settings
 default_storage_engine         = InnoDB
 innodb_buffer_pool_size        = {{ mariadb_innodb_buffer_pool_size }}
+{% if (mariadb_running_version | default(mariadb_version)) is version('10.6', '<') %}
 innodb_buffer_pool_instances   = {{ mariadb_innodb_buffer_pool_instances }}
+{% endif %}
 innodb_file_per_table          = {{ mariadb_innodb_file_per_table }}
 innodb_flush_method            = {{ mariadb_innodb_flush_method }}
 innodb_log_file_size           = {{ mariadb_innodb_log_file_size }}
@@ -109,7 +111,6 @@ server_audit_format            = {{ mariadb_audit_log_format }}
 
 # Disaster recovery
 {% if mariadb_auto_restart | bool %}
-restart-on-upgrade             = 1
 max_connect_errors             = 1000000
 {% endif %}
 

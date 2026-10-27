@@ -3,37 +3,34 @@
   hosts: all
   become: true
   vars:
-    mariadb_root_password: "molecule_test_password"
+    mariadb_root_password: "MoleculeTest123!"
     mariadb_databases:
       - name: backup_test_db
         encoding: utf8mb4
         collation: utf8mb4_unicode_ci
     mariadb_users:
       - name: backup_test_user
-        password: backup_test_password
+        password: BackupTest123!
         priv: "backup_test_db.*:ALL"
     mariadb_backup_enabled: true
     mariadb_backup_frequency: hourly
   roles:
-    - role: thomasvincent.mariadb
+    - role: "{{ playbook_dir }}/../.."
 
   tasks:
     - name: Create test table
       ansible.builtin.shell: >
-        mysql -u root -p{{ mariadb_root_password }} backup_test_db -e
+        mariadb -u root -p{{ mariadb_root_password }} backup_test_db -e
         "CREATE TABLE IF NOT EXISTS test_table (id INT AUTO_INCREMENT PRIMARY KEY,
         data VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"
       changed_when: false
 
-    - name: Insert test data
-      ansible.builtin.shell: >
-        mysql -u root -p{{ mariadb_root_password }} backup_test_db -e
-        "INSERT INTO test_table (data) VALUES ('test data 1'), ('test data 2'), ('test data 3');"
-      changed_when: false
-
-    # Force a backup to run for testing
-    - name: Trigger a manual backup
-      ansible.builtin.shell: >
-        [ -f {{ mariadb_backup_dir }}/mysql_backup.sh ] && {{ mariadb_backup_dir }}/mysql_backup.sh
-      changed_when: true
+    - name: Insert deterministic test data
+      community.mysql.mysql_query:
+        login_db: backup_test_db
+        query: >-
+          INSERT IGNORE INTO test_table (id, data)
+          VALUES (1, 'test data 1'), (2, 'test data 2'), (3, 'test data 3')
+      register: mariadb_backup_fixture_rows
+      changed_when: mariadb_backup_fixture_rows.rowcount[0] | int > 0

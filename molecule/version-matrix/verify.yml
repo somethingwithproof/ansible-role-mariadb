@@ -3,7 +3,7 @@
   hosts: all
   become: true
   vars:
-    mariadb_root_password: "molecule_test_password"
+    mariadb_root_password: "MoleculeTest123!"
   tasks:
     - name: Check if MariaDB service is running
       ansible.builtin.service_facts:
@@ -24,7 +24,7 @@
         success_msg: "MariaDB service is running"
 
     - name: Check MariaDB version
-      ansible.builtin.shell: mysql -u root -p{{ mariadb_root_password }} -e "SELECT VERSION();"
+      ansible.builtin.shell: mariadb -u root -p{{ mariadb_root_password }} -e "SELECT VERSION();"
       register: mysql_version
       changed_when: false
 
@@ -41,7 +41,7 @@
         success_msg: "Correct MariaDB version {{ expected_version }} was installed"
 
     - name: Check that test database exists
-      ansible.builtin.shell: mysql -u root -p{{ mariadb_root_password }} -e "SHOW DATABASES LIKE 'version_test_db';"
+      ansible.builtin.shell: mariadb -u root -p{{ mariadb_root_password }} -e "SHOW DATABASES LIKE 'version_test_db';"
       register: test_db
       changed_when: false
 
@@ -52,7 +52,7 @@
         success_msg: "Test database 'version_test_db' was successfully created"
 
     - name: Check that test user can connect
-      ansible.builtin.shell: mysql -u version_test_user -pversion_test_password version_test_db -e "SELECT 1;"
+      ansible.builtin.shell: mariadb -u version_test_user -pVersionTest123! version_test_db -e "SELECT 1;"
       register: test_user
       changed_when: false
 
