@@ -35,7 +35,6 @@
             service_state.ansible_facts.services[exporter_service_name].state == 'running'
         fail_msg: "mysqld_exporter service is not running"
         success_msg: "mysqld_exporter service is running"
-      ignore_errors: true
 
     - name: Check mysqld_exporter binary exists
       ansible.builtin.shell: which mysqld_exporter || true
@@ -66,7 +65,9 @@
       ansible.builtin.assert:
         that:
           - "'PROCESS' in monitoring_grants.stdout"
-          - "'REPLICATION CLIENT' in monitoring_grants.stdout"
+          - >
+            'REPLICATION CLIENT' in monitoring_grants.stdout or
+            'BINLOG MONITOR' in monitoring_grants.stdout
           - "'SELECT' in monitoring_grants.stdout"
         fail_msg: "Monitoring user does not have correct permissions"
         success_msg: "Monitoring user has correct permissions"
@@ -76,19 +77,17 @@
         port: 9104
         timeout: 5
       register: port_check
-      ignore_errors: true
 
     - name: Get mysqld_exporter metrics
       ansible.builtin.uri:
         url: http://localhost:9104/metrics
         return_content: yes
       register: exporter_metrics
-      ignore_errors: true
       when: port_check.failed == false
 
     - name: Verify mysqld_exporter is exposing metrics
       ansible.builtin.assert:
-        that: "'mysql_' in exporter_metrics.content"
+        that: "'mysql_up 1' in exporter_metrics.content"
         fail_msg: "mysqld_exporter is not exposing metrics"
         success_msg: "mysqld_exporter is correctly exposing metrics"
       when: port_check.failed == false and exporter_metrics is defined

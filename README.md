@@ -31,6 +31,7 @@ ansible-galaxy collection install community.mysql
 - hosts: database_servers
   become: true
   vars:
+    mariadb_configure_repo: false
     mariadb_root_password: "{{ vault_mariadb_root_password }}"
     mariadb_databases:
       - name: app_db
