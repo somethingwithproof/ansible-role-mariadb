@@ -18,4 +18,4 @@
     mariadb_exporter_enabled: true
     mariadb_exporter_port: 9104
   roles:
-    - role: thomasvincent.mariadb
+    - role: "{{ playbook_dir }}/../.."

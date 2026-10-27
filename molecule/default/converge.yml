@@ -13,4 +13,4 @@
         password: MoleculeTest123!
         priv: "molecule_test_db.*:ALL"
   roles:
-    - role: thomasvincent.mariadb
+    - role: "{{ playbook_dir }}/../.."

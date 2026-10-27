@@ -3,7 +3,7 @@
   hosts: all
   become: true
   roles:
-    - role: thomasvincent.mariadb
+    - role: "{{ playbook_dir }}/../.."
 
 # Replica initialization is a disposable test fixture, not a role feature.
 - name: Initialize disposable replication fixtures

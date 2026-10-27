@@ -15,7 +15,7 @@
     mariadb_backup_enabled: true
     mariadb_backup_frequency: hourly
   roles:
-    - role: thomasvincent.mariadb
+    - role: "{{ playbook_dir }}/../.."
 
   tasks:
     - name: Create test table
