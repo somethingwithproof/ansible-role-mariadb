@@ -5,10 +5,10 @@
 pre-commit==4.7.0
 black==26.10.1
 isort==9.0.2
-mypy==2.4.0
-flake8==7.4.1
+mypy==2.4.1
+flake8==7.5.0
 ansible-doc-extractor==0.1.11
 
 # Documentation
 mkdocs==1.6.1
-mkdocs-material==9.7.7
+mkdocs-material==9.8.0
