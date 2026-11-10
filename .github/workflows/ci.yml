@@ -295,3 +295,32 @@ jobs:
       - name: Clean up Docker services
         if: always()
         run: docker compose -f dev/docker-compose.yml --profile test down -v
+
+  # The one check branch protection requires. A job skipped because a job it
+  # needs failed counts as passing for a required check, so requiring the
+  # downstream jobs directly let a failed Molecule run merge. This job always
+  # runs and fails unless every job below succeeded.
+  gate:
+    name: CI Gate
+    if: always()
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    needs:
+      - lint
+      - molecule
+      - additional-scenarios
+      - supported-distros
+      - docker
+      - docker-replication
+    steps:
+      - name: Require every job to succeed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          failed=$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"' <<<"$NEEDS")
+          if [[ -n "$failed" ]]; then
+            echo "::error::Required jobs did not succeed:"
+            echo "$failed"
+            exit 1
+          fi
+          echo "All required jobs succeeded."
