@@ -23,11 +23,11 @@ source or a portable role installation.
 Read `CONTRIBUTING.md`, `Makefile`, `.pre-commit-config.yaml`, `requirements.txt`
 and `.github/workflows/ci.yml`. Requirements, old README support claims and the
 integration matrix differ; report discrepancies rather than claiming parity.
-The lint hook uses Python 3.12, ansible-lint 26.9.0 and ansible-core 2.21.4.
+The lint hook uses Python 3.13, ansible-lint 26.10.1 and ansible-core 2.22.0.
 
 ```sh
-mise exec python@3.12 -- pre-commit run --all-files
-mise exec python@3.12 -- make lint
+mise exec python@3.13 -- pre-commit run --all-files
+mise exec python@3.13 -- make lint
 ```
 
 Install hook environments normally; do not bypass hooks or allow incompatible
