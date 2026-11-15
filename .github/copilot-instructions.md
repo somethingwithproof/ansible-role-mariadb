@@ -12,7 +12,7 @@ Read [AGENTS.md](../AGENTS.md) for the complete repository-specific guidance.
 Review idempotence, credentials/permissions, service restarts, replication identity, backup and restore safety.
 
 Require focused regression evidence for changed behavior and preserve existing
-correctness/security checks. `mise exec python@3.12 -- pre-commit run --all-files`; named Molecule scenarios require disposable Docker fixtures.
+correctness/security checks. `mise exec python@3.13 -- pre-commit run --all-files`; named Molecule scenarios require disposable Docker fixtures.
 
 Flag unsupported maturity claims, hidden failures, credentials in code/logs, and
 generated output presented as first-party implementation. Review permissions,

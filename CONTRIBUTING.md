@@ -72,7 +72,7 @@ Regenerate the new runtime lock with Python selected through `mise`:
 
 ```sh
 mise exec python@3.13 -- uv pip compile requirements/ci-ansible-14.5.0.in --python-version 3.13 --python-platform x86_64-manylinux_2_35 --only-binary :all: --generate-hashes --output-file requirements/ci-ansible-14.5.0.txt
-mise exec python@3.12 -- pre-commit run --all-files
+mise exec python@3.13 -- pre-commit run --all-files
 mise exec python@3.13 -- python -m unittest discover -s tests/unit -v
 mise exec python@3.13 -- molecule test -s lts
 ```

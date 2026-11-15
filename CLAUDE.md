@@ -15,7 +15,7 @@ Review idempotence, credentials/permissions, service restarts, replication ident
 
 ## Verification
 
-`mise exec python@3.12 -- pre-commit run --all-files`; named Molecule scenarios require disposable Docker fixtures.
+`mise exec python@3.13 -- pre-commit run --all-files`; named Molecule scenarios require disposable Docker fixtures.
 
 Separate offline checks from operations that change hosts, databases, firewalls
 or published artifacts. State verification limits and preserve existing controls.
