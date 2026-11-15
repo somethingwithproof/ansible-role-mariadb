@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025-2026 Thomas Vincent <thomasvincent@gmail.com>
+# SPDX-License-Identifier: MIT
+
 .PHONY: help lint test molecule-test molecule-converge molecule-verify \
 	molecule-test-all multi-instance-test backup-test monitoring-test \
 	version-matrix-test docker-test docker-replication-test docker-test-all \

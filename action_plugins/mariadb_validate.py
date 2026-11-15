@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# SPDX-FileCopyrightText: 2025-2026 Thomas Vincent <thomasvincent@gmail.com>
+# SPDX-License-Identifier: MIT
+
 """Custom Ansible action plugin for MariaDB validation."""
 
 from ansible.plugins.action import ActionBase

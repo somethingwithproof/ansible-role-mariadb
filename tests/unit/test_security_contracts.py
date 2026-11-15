@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Thomas Vincent <thomasvincent@gmail.com>
+# SPDX-License-Identifier: MIT
+
 """Offline security contracts; no database or GitHub connection is used."""
 
 import json
