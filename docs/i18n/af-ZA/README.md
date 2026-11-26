@@ -45,6 +45,7 @@ ansible-galaxy collection install community.mysql
 database_servers:
   hosts:
     db01:
+      ansible_host: "192.168.0.10"
       database_network_address: "192.168.0.10"
 ```
 
