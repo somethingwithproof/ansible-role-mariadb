@@ -41,12 +41,20 @@ ansible-galaxy collection install community.mysql
 ```
 
 ```yaml
+# inventory.yml
+database_servers:
+  hosts:
+    db01:
+      database_network_address: "192.168.0.10"
+```
+
+```yaml
 - hosts: database_servers
   become: true
   vars:
     mariadb_configure_repo: false
     mariadb_allow_remote_connections: true
-    mariadb_bind_address: "{{ ansible_facts.default_ipv4.address }}"
+    mariadb_bind_address: "{{ database_network_address }}"
     mariadb_root_password: "{{ vault_mariadb_root_password }}"
     mariadb_databases:
       - name: app_db
