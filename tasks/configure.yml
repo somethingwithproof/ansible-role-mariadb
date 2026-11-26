@@ -55,8 +55,7 @@
 
 - name: Wait for MariaDB to start
   ansible.builtin.wait_for:
-    host: "{{ mariadb_bind_address }}"
-    port: "{{ mariadb_port }}"
+    path: "{{ mariadb_socket }}"
     state: started
     timeout: 30
   when: mariadb_config.changed

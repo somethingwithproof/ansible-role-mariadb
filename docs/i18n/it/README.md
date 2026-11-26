@@ -45,6 +45,8 @@ ansible-galaxy collection install community.mysql
   become: true
   vars:
     mariadb_configure_repo: false
+    mariadb_allow_remote_connections: true
+    mariadb_bind_address: "{{ ansible_facts.default_ipv4.address }}"
     mariadb_root_password: "{{ vault_mariadb_root_password }}"
     mariadb_databases:
       - name: app_db
